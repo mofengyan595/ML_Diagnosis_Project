@@ -1,0 +1,18 @@
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+
+.venv/
+venv/
+env/
+
+.DS_Store
+Thumbs.db
+
+*.log
+
+# 如果数据集很大，可以忽略
+# data/*.csv
+
+# 如果模型文件很大，可以忽略
+# models/*.pkl
