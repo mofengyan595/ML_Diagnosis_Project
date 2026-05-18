@@ -7,7 +7,7 @@ from typing import Any
 import joblib
 import pandas as pd
 
-from config import FEATURES, FEATURE_LABELS, MODEL_PATH, RISK_THRESHOLDS, SCALER_PATH
+from config import FEATURE_LABELS, FEATURES, MODEL_FEATURES, MODEL_PATH, RISK_THRESHOLDS, SCALER_PATH
 
 
 def _load_artifact(path: Path) -> Any | None:
@@ -17,7 +17,8 @@ def _load_artifact(path: Path) -> Any | None:
 
 
 def _build_input_frame(values: dict[str, float]) -> pd.DataFrame:
-    return pd.DataFrame([[values[name] for name in FEATURES]], columns=FEATURES)
+    row = {model_name: values[local_name] for local_name, model_name in zip(FEATURES, MODEL_FEATURES)}
+    return pd.DataFrame([row], columns=MODEL_FEATURES)
 
 
 def _predict_with_model(values: dict[str, float]) -> tuple[float, str] | None:

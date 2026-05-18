@@ -18,6 +18,18 @@ FEATURES = [
 ]
 
 
+MODEL_FEATURES = [
+    "Pregnancies",
+    "Glucose",
+    "BloodPressure",
+    "SkinThickness",
+    "Insulin",
+    "BMI",
+    "DiabetesPedigreeFunction",
+    "Age",
+]
+
+
 FEATURE_LABELS = {
     "pregnancies": "怀孕次数",
     "glucose": "血糖值",
