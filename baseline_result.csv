@@ -1,0 +1,3 @@
+﻿dataset,accuracy,precision,recall,f1,roc_auc
+validation,0.7967,0.68,0.7907,0.7312,0.8756
+test,0.6948,0.5538,0.6667,0.605,0.8087

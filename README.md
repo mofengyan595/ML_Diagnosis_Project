@@ -10,15 +10,26 @@
 ML_Diagnosis_Project/
 |-- data/                  # 数据集文件
 |   |-- diabetes.csv
+|   |-- cleaned_data.csv
+|   |-- processed_data.csv
+|   |-- train_processed.csv
+|   |-- val_processed.csv
+|   |-- test_processed.csv
 |-- figures/               # 图表、系统截图
 |-- models/                # 训练完成的模型文件
 |   |-- best_model.pkl     # 最终模型，后续由模型训练同学提供
 |   |-- scaler.pkl         # 标准化器，如模型需要则提供
+|   |-- baseline_logistic_regression.pkl
 |-- report/                # 报告、PPT、展示说明材料
+|   |-- data_analysis_summary.md
 |-- src/                   # 源代码
+|   |-- data_analysis.py   # 数据理解、缺失值、类别分布和可视化
+|   |-- data_process.py    # 异常值处理、填充、标准化和数据划分
+|   |-- baseline_model.py  # Logistic Regression 基准模型
 |   |-- app.py             # Gradio 系统 Demo 入口
 |   |-- config.py          # 特征名、模型路径等配置
 |   |-- predict.py         # 模型加载与预测函数
+|-- baseline_result.csv    # 基准模型指标
 |-- environment.yml        # Conda 环境配置
 |-- requirements.txt       # pip 依赖列表
 |-- README.md              # 项目说明文档
@@ -133,18 +144,32 @@ Outcome
 
 - 读取 `data/diabetes.csv`
 - 检查缺失值、异常值和类别分布
-- 完成训练集 / 测试集划分
+- 完成训练集 / 验证集 / 测试集划分
 - 完成特征标准化
 - 训练 Logistic Regression 作为基准模型
-- 输出数据字段说明、缺失值统计图、类别分布图、特征分布图
+- 输出数据字段说明、缺失值统计、类别分布图、特征分布图、相关性热力图和基准模型结果
 
 建议新增或维护的文件：
 
 ```text
-src/data_preprocess.py
-src/train_baseline.py
+src/data_analysis.py
+src/data_process.py
+src/baseline_model.py
+data/cleaned_data.csv
+data/processed_data.csv
+data/train_processed.csv
+data/val_processed.csv
+data/test_processed.csv
 figures/class_distribution.png
 figures/feature_distribution.png
+figures/correlation_heatmap.png
+figures/baseline_feature_importance.png
+models/scaler.pkl
+models/baseline_logistic_regression.pkl
+baseline_result.csv
+baseline_prediction_details.csv
+baseline_feature_importance.csv
+report/data_analysis_summary.md
 ```
 
 ### 多模型训练与模型对比
