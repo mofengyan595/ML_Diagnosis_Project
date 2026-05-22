@@ -10,6 +10,15 @@ env/
 Thumbs.db
 
 *.log
+*.aux
+*.out
+*.toc
+*.synctex.gz
+*.fls
+*.fdb_latexmk
+tmp/
+
+report/reference/
 
 # 如果数据集很大，可以忽略
 # data/*.csv

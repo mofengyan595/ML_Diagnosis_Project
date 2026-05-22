@@ -1,0 +1,89 @@
+% !TeX program = xelatex
+\documentclass[conference]{IEEEtran}
+
+\usepackage[UTF8,fontset=none]{ctex}
+\setmainfont[
+  Path=fonts/,
+  Extension=.otf,
+  UprightFont=*-regular,
+  BoldFont=*-bold,
+  ItalicFont=*-italic,
+  BoldItalicFont=*-bolditalic
+]{texgyretermes}
+\setsansfont[
+  Path=fonts/,
+  Extension=.otf,
+  UprightFont=*-regular,
+  BoldFont=*-bold,
+  ItalicFont=*-italic,
+  BoldItalicFont=*-bolditalic
+]{texgyretermes}
+\setCJKmainfont[
+  Path=fonts/,
+  UprightFont=FandolSong-Regular.otf,
+  BoldFont=FandolSong-Bold.otf,
+  ItalicFont=FandolKai-Regular.otf,
+  BoldItalicFont=FandolKai-Regular.otf
+]{FandolSong-Regular.otf}
+\setCJKsansfont[
+  Path=fonts/,
+  UprightFont=FandolHei-Regular.otf,
+  BoldFont=FandolHei-Bold.otf,
+  ItalicFont=FandolKai-Regular.otf,
+  BoldItalicFont=FandolKai-Regular.otf
+]{FandolHei-Regular.otf}
+\setCJKmonofont[
+  Path=fonts/,
+  UprightFont=FandolFang-Regular.otf,
+  BoldFont=FandolHei-Bold.otf,
+  ItalicFont=FandolKai-Regular.otf,
+  BoldItalicFont=FandolKai-Regular.otf
+]{FandolFang-Regular.otf}
+\DeclareFontShape{TU}{FandolSong-Regular.otf(0)}{m}{sc}
+  {<-> "[fonts/FandolSong-Regular.otf]:script=hani;language=dflt;"}{}
+\usepackage{amsmath}
+\usepackage{booktabs}
+\usepackage{graphicx}
+\usepackage{array}
+\usepackage{multirow}
+\usepackage{url}
+\usepackage{cite}
+\usepackage[hidelinks]{hyperref}
+
+\graphicspath{{../figures/}{figures/}}
+
+\newcommand{\placeholder}[1]{%
+  \par\smallskip
+  \noindent\fbox{%
+    \begin{minipage}{\dimexpr\linewidth-2\fboxsep-2\fboxrule\relax}
+      \raggedright\textbf{待补充：}#1
+    \end{minipage}%
+  }%
+  \par\smallskip
+}
+
+\title{基于多种机器学习模型的糖尿病风险\\预测研究}
+
+\author{
+  \IEEEauthorblockN{柯文丽，王佳妮，秦琪，何晨东}
+  \IEEEauthorblockA{华东师范大学\\计算机科学与技术学院}
+  \IEEEauthorblockA{《机器学习》课程项目}
+}
+
+\begin{document}
+
+\maketitle
+
+\input{sections/00_abstract}
+\input{sections/01_introduction}
+\input{sections/02_related_work}
+\input{sections/03_dataset_preprocessing}
+\input{sections/04_methodology}
+\input{sections/05_experiments}
+\input{sections/06_results_analysis}
+\input{sections/07_conclusion}
+
+\bibliographystyle{IEEEtran}
+\bibliography{references}
+
+\end{document}

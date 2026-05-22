@@ -1,0 +1,21 @@
+\ProvidesFile{TUptm.fd}[Local TU ptm mapping for XeLaTeX]
+\DeclareFontFamily{TU}{ptm}{}
+\DeclareFontShape{TU}{ptm}{m}{n}
+  {<-> "[fonts/texgyretermes-regular.otf]:mapping=tex-text;"}{}
+\DeclareFontShape{TU}{ptm}{b}{n}
+  {<-> "[fonts/texgyretermes-bold.otf]:mapping=tex-text;"}{}
+\DeclareFontShape{TU}{ptm}{bx}{n}
+  {<-> "[fonts/texgyretermes-bold.otf]:mapping=tex-text;"}{}
+\DeclareFontShape{TU}{ptm}{m}{it}
+  {<-> "[fonts/texgyretermes-italic.otf]:mapping=tex-text;"}{}
+\DeclareFontShape{TU}{ptm}{b}{it}
+  {<-> "[fonts/texgyretermes-bolditalic.otf]:mapping=tex-text;"}{}
+\DeclareFontShape{TU}{ptm}{bx}{it}
+  {<-> "[fonts/texgyretermes-bolditalic.otf]:mapping=tex-text;"}{}
+\DeclareFontShape{TU}{ptm}{m}{sl}
+  {<->ssub*ptm/m/it}{}
+\DeclareFontShape{TU}{ptm}{b}{sl}
+  {<->ssub*ptm/b/it}{}
+\DeclareFontShape{TU}{ptm}{bx}{sl}
+  {<->ssub*ptm/b/sl}{}
+\endinput
