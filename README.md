@@ -91,6 +91,9 @@ ML_Diagnosis_Project/
 data/diabetes.csv
 ```
 
+数据集来源：Kaggle Pima Indians Diabetes Database  
+https://www.kaggle.com/datasets/uciml/pima-indians-diabetes-database
+
 字段：
 
 ```text
@@ -162,8 +165,8 @@ baseline_feature_importance.csv
 
 | 数据集 | Accuracy | Precision | Recall | F1 | ROC AUC |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| validation | 0.7967 | 0.6800 | 0.7907 | 0.7312 | 0.8756 |
-| test | 0.6948 | 0.5538 | 0.6667 | 0.6050 | 0.8087 |
+| validation | 0.7642 | 0.6346 | 0.7674 | 0.6947 | 0.8709 |
+| test | 0.7273 | 0.5938 | 0.7037 | 0.6441 | 0.8154 |
 
 ## 各成员下一步
 
@@ -271,7 +274,7 @@ models/scaler.pkl
 用户输入原始指标
 -> 处理不合理 0 值
 -> 中位数填充
--> IQR 异常值裁剪
+-> IQR 异常值裁剪（边界基于训练集有效观测值）
 -> 标准化
 -> 模型预测
 ```

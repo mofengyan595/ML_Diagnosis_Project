@@ -73,15 +73,18 @@ def stratified_split(df: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame, pd.D
 def fit_iqr_bounds(train_features: pd.DataFrame) -> dict[str, tuple[float, float]]:
     bounds: dict[str, tuple[float, float]] = {}
     for column in FEATURE_COLUMNS:
-        q1 = train_features[column].quantile(0.25)
-        q3 = train_features[column].quantile(0.75)
+        observed_values = train_features[column].dropna()
+        if observed_values.empty:
+            continue
+
+        q1 = observed_values.quantile(0.25)
+        q3 = observed_values.quantile(0.75)
         iqr = q3 - q1
         lower = q1 - 1.5 * iqr
         upper = q3 + 1.5 * iqr
 
-        # 这些字段天然不应小于 0，裁剪下界不能低于 0。
-        if column in FEATURE_COLUMNS:
-            lower = max(lower, 0.0)
+        # IQR 边界只基于训练集真实观测值计算，避免高缺失列被填充值压窄范围。
+        lower = max(lower, 0.0)
         bounds[column] = (float(lower), float(upper))
     return bounds
 
@@ -131,8 +134,8 @@ def main() -> None:
     imputer = SimpleImputer(strategy="median")
     imputer.fit(train_df[FEATURE_COLUMNS])
 
+    bounds = fit_iqr_bounds(train_df[FEATURE_COLUMNS])
     train_imputed = pd.DataFrame(imputer.transform(train_df[FEATURE_COLUMNS]), columns=FEATURE_COLUMNS)
-    bounds = fit_iqr_bounds(train_imputed)
     train_clipped = apply_iqr_clipping(train_imputed, bounds)
 
     scaler = StandardScaler()

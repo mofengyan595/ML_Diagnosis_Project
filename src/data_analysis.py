@@ -14,8 +14,6 @@ import seaborn as sns
 BASE_DIR = Path(__file__).resolve().parents[1]
 DATA_PATH = BASE_DIR / "data" / "diabetes.csv"
 FIGURES_DIR = BASE_DIR / "figures"
-REPORT_DIR = BASE_DIR / "report"
-SUMMARY_PATH = REPORT_DIR / "data_analysis_summary.md"
 
 FEATURE_COLUMNS = [
     "Pregnancies",
@@ -45,24 +43,8 @@ FIELD_DESCRIPTIONS = {
 INVALID_ZERO_COLUMNS = ["Glucose", "BloodPressure", "SkinThickness", "Insulin", "BMI"]
 
 
-def series_to_markdown(series: pd.Series, index_name: str, value_name: str) -> str:
-    lines = [f"| {index_name} | {value_name} |", "| --- | ---: |"]
-    for index, value in series.items():
-        lines.append(f"| {index} | {value} |")
-    return "\n".join(lines)
-
-
-def class_distribution_to_markdown(class_counts: pd.Series) -> str:
-    lines = ["| 原始标签 | 风险含义 | 样本数量 |", "| --- | --- | ---: |"]
-    label_names = {0: "未患病/低风险", 1: "患病/高风险"}
-    for label in [0, 1]:
-        lines.append(f"| {label} | {label_names[label]} | {class_counts.get(label, 0)} |")
-    return "\n".join(lines)
-
-
 def ensure_dirs() -> None:
     FIGURES_DIR.mkdir(parents=True, exist_ok=True)
-    REPORT_DIR.mkdir(parents=True, exist_ok=True)
 
 
 def set_plot_style() -> None:
@@ -142,65 +124,6 @@ def save_correlation_heatmap(df: pd.DataFrame) -> None:
     plt.close(fig)
 
 
-def build_markdown_summary(df: pd.DataFrame) -> str:
-    missing_counts = df.isna().sum()
-    zero_counts = (df == 0).sum()
-    class_counts = df[TARGET_COLUMN].value_counts().sort_index()
-    invalid_zero_counts = zero_counts[INVALID_ZERO_COLUMNS]
-
-    lines = [
-        "# 成员 A 数据分析摘要",
-        "",
-        "## 数据集基本信息",
-        "",
-        f"- 数据文件：`data/diabetes.csv`",
-        f"- 样本数量：{df.shape[0]}",
-        f"- 字段数量：{df.shape[1]}",
-        "- 问题类型：二分类问题，预测是否存在糖尿病风险。",
-        "",
-        "## 字段含义",
-        "",
-    ]
-    for column in EXPECTED_COLUMNS:
-        lines.append(f"- `{column}`：{FIELD_DESCRIPTIONS[column]}")
-
-    lines.extend(
-        [
-            "",
-            "## 缺失值检查",
-            "",
-            series_to_markdown(missing_counts, "字段", "缺失值数量"),
-            "",
-            "原始 CSV 中没有显式空缺失值，但部分医学指标存在不合理的 0 值，应在预处理阶段按缺失值处理。",
-            "",
-            "## 0 值与异常说明",
-            "",
-            series_to_markdown(zero_counts, "字段", "0 值数量"),
-            "",
-            "医学上不合理的 0 值字段如下：",
-            "",
-            series_to_markdown(invalid_zero_counts, "字段", "不合理 0 值数量"),
-            "",
-            "`Pregnancies=0` 表示未怀孕过，`Outcome=0` 表示未患病或低风险，二者不是异常值。",
-            "",
-            "## 类别分布",
-            "",
-            class_distribution_to_markdown(class_counts),
-            "",
-            f"- 低风险/未患病比例：{class_counts.get(0, 0) / len(df):.2%}",
-            f"- 高风险/患病比例：{class_counts.get(1, 0) / len(df):.2%}",
-            "- 说明：模型训练仍使用原始二分类标签 0/1；低/中/高风险等级由预测概率在系统层进一步划分。",
-            "",
-            "## 已生成图表",
-            "",
-            "- `figures/class_distribution.png`：类别分布图",
-            "- `figures/feature_distribution.png`：特征分布图",
-            "- `figures/correlation_heatmap.png`：相关性热力图",
-        ]
-    )
-    return "\n".join(lines) + "\n"
-
-
 def main() -> None:
     ensure_dirs()
     set_plot_style()
@@ -222,9 +145,7 @@ def main() -> None:
     save_feature_distribution(df)
     save_correlation_heatmap(df)
 
-    SUMMARY_PATH.write_text(build_markdown_summary(df), encoding="utf-8")
     print(f"\n图表已保存到: {FIGURES_DIR}")
-    print(f"数据分析摘要已保存到: {SUMMARY_PATH}")
 
 
 if __name__ == "__main__":
