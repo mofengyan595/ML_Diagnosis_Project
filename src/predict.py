@@ -7,7 +7,18 @@ from typing import Any
 import joblib
 import pandas as pd
 
-from config import FEATURE_LABELS, FEATURES, MODEL_FEATURES, MODEL_PATH, RISK_THRESHOLDS, SCALER_PATH
+from config import (
+    BASELINE_MODEL_PATH,
+    FEATURE_LABELS,
+    FEATURES,
+    IMPUTER_PATH,
+    IQR_BOUNDS_PATH,
+    MODEL_FEATURES,
+    MODEL_PATH,
+    RISK_THRESHOLDS,
+    SCALER_PATH,
+    ZERO_AS_MISSING_FEATURES,
+)
 
 
 def _load_artifact(path: Path) -> Any | None:
@@ -21,14 +32,66 @@ def _build_input_frame(values: dict[str, float]) -> pd.DataFrame:
     return pd.DataFrame([row], columns=MODEL_FEATURES)
 
 
+def _replace_invalid_zero_values(input_frame: pd.DataFrame) -> pd.DataFrame:
+    processed = input_frame.copy()
+    for feature in ZERO_AS_MISSING_FEATURES:
+        processed.loc[processed[feature] == 0, feature] = pd.NA
+    return processed
+
+
+def _apply_imputer(input_frame: pd.DataFrame) -> pd.DataFrame:
+    imputer = _load_artifact(IMPUTER_PATH)
+    if imputer is None:
+        return input_frame
+
+    imputed_values = imputer.transform(input_frame)
+    return pd.DataFrame(imputed_values, columns=MODEL_FEATURES)
+
+
+def _apply_iqr_clipping(input_frame: pd.DataFrame) -> pd.DataFrame:
+    bounds = _load_artifact(IQR_BOUNDS_PATH)
+    if not bounds:
+        return input_frame
+
+    clipped = input_frame.copy()
+    for feature, (lower, upper) in bounds.items():
+        if feature in clipped.columns:
+            clipped[feature] = clipped[feature].clip(lower=lower, upper=upper)
+    return clipped
+
+
+def _preprocess_input(values: dict[str, float]) -> pd.DataFrame:
+    input_frame = _build_input_frame(values)
+    input_frame = _replace_invalid_zero_values(input_frame)
+    input_frame = _apply_imputer(input_frame)
+    input_frame = _apply_iqr_clipping(input_frame)
+
+    scaler = _load_artifact(SCALER_PATH)
+    if scaler is None:
+        return input_frame
+
+    scaled_values = scaler.transform(input_frame.to_numpy())
+    return pd.DataFrame(scaled_values, columns=MODEL_FEATURES)
+
+
+def _select_model() -> tuple[Any, str] | tuple[None, None]:
+    final_model = _load_artifact(MODEL_PATH)
+    if final_model is not None:
+        return final_model, "models/best_model.pkl"
+
+    baseline_model = _load_artifact(BASELINE_MODEL_PATH)
+    if baseline_model is not None:
+        return baseline_model, "models/baseline_logistic_regression.pkl"
+
+    return None, None
+
+
 def _predict_with_model(values: dict[str, float]) -> tuple[float, str] | None:
-    model = _load_artifact(MODEL_PATH)
+    model, model_name = _select_model()
     if model is None:
         return None
 
-    input_frame = _build_input_frame(values)
-    scaler = _load_artifact(SCALER_PATH)
-    model_input = scaler.transform(input_frame) if scaler is not None else input_frame
+    model_input = _preprocess_input(values)
 
     if hasattr(model, "predict_proba"):
         probability = float(model.predict_proba(model_input)[0][1])
@@ -36,11 +99,12 @@ def _predict_with_model(values: dict[str, float]) -> tuple[float, str] | None:
         prediction = float(model.predict(model_input)[0])
         probability = prediction
 
-    return max(0.0, min(1.0, probability)), "已加载 models/best_model.pkl 进行预测。"
+    note = f"当前使用模型：{model_name}。已应用缺失值填充、IQR 裁剪和标准化预处理。"
+    return max(0.0, min(1.0, probability)), note
 
 
 def _predict_with_rule(values: dict[str, float]) -> tuple[float, str]:
-    # Temporary fallback for the UI demo before teammates provide the final model.
+    # Temporary fallback for the UI demo before teammates provide model artifacts.
     score = -4.2
     score += 0.055 * (values["glucose"] - 100)
     score += 0.075 * (values["bmi"] - 24)
@@ -52,7 +116,7 @@ def _predict_with_rule(values: dict[str, float]) -> tuple[float, str]:
     score += 0.01 * max(values["skin_thickness"] - 20, 0)
 
     probability = 1 / (1 + math.exp(-score))
-    return probability, "当前未检测到正式模型，结果由演示用规则函数生成。"
+    return probability, "当前未检测到正式模型或基准模型，结果由演示规则函数生成。"
 
 
 def _risk_level(probability: float) -> str:
