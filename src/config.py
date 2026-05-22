@@ -2,8 +2,12 @@ from pathlib import Path
 
 
 BASE_DIR = Path(__file__).resolve().parents[1]
+
 MODEL_PATH = BASE_DIR / "models" / "best_model.pkl"
+BASELINE_MODEL_PATH = BASE_DIR / "models" / "baseline_logistic_regression.pkl"
 SCALER_PATH = BASE_DIR / "models" / "scaler.pkl"
+IMPUTER_PATH = BASE_DIR / "models" / "imputer.pkl"
+IQR_BOUNDS_PATH = BASE_DIR / "models" / "iqr_bounds.pkl"
 
 
 FEATURES = [
@@ -40,6 +44,15 @@ FEATURE_LABELS = {
     "diabetes_pedigree": "糖尿病家族遗传指数",
     "age": "年龄",
 }
+
+
+ZERO_AS_MISSING_FEATURES = [
+    "Glucose",
+    "BloodPressure",
+    "SkinThickness",
+    "Insulin",
+    "BMI",
+]
 
 
 RISK_THRESHOLDS = {
