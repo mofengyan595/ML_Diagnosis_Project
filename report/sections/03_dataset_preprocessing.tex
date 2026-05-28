@@ -1,16 +1,169 @@
 \section{数据集与预处理}
 
-\subsection{数据集来源}
-\placeholder{写明 Kaggle / UCI Pima Indians Diabetes 数据集来源、样本数、特征数、标签含义。}
+\subsection{数据集来源与变量定义}
 
-\subsection{特征说明}
-\placeholder{放 8 个输入特征的专业表格：英文名、中文含义、单位/医学含义、是否存在不合理 0 值。}
+本文使用 Pima Indians Diabetes Database 进行实验。
+该数据集包含 768 条样本、8 个输入特征和 1 个二分类标签，
+所有输入特征均为数值型\cite{uci_pima}。
+标签 \texttt{Outcome} 中，0 表示未检测为糖尿病阳性，
+1 表示检测为糖尿病阳性。
+原始数据包含 500 个阴性样本和 268 个阳性样本，
+阳性样本占比约为 34.9\%。
+图 \ref{fig:class_distribution} 展示了该类别分布。
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\linewidth]{class_distribution.png}
+  \caption{原始数据集中 \texttt{Outcome} 的类别分布}
+  \label{fig:class_distribution}
+\end{figure}
+
+8 个输入变量的含义见表 \ref{tab:feature_description}。
+\texttt{Pregnancies} 的 0 值表示没有怀孕经历，属于合理取值。
+\texttt{Glucose}、\texttt{BloodPressure}、\texttt{SkinThickness}、
+\texttt{Insulin} 和 \texttt{BMI} 的 0 值缺乏合理医学含义，
+因此本文将这些 0 值视作缺失或未测量记录
+\cite{khanamComparisonMachineLearning2021,rezaImprovingDiabetesDisease2024}。
+
+\begin{table}[t]
+  \caption{Pima 数据集输入特征说明}
+  \label{tab:feature_description}
+  \centering
+  \scriptsize
+  \setlength{\tabcolsep}{2pt}
+  \begin{tabular}{@{}p{0.24\linewidth}p{0.40\linewidth}p{0.13\linewidth}p{0.15\linewidth}@{}}
+    \toprule
+    特征 & 含义 & 单位/说明 & 0 值处理 \\
+    \midrule
+    Pregnancies & 怀孕次数 & 次 & 保留 \\
+    Glucose & 口服葡萄糖耐量测试 2 小时血糖浓度 & -- & 缺失 \\
+    BloodPressure & 舒张压 & mmHg & 缺失 \\
+    SkinThickness & 三头肌皮褶厚度 & mm & 缺失 \\
+    Insulin & 2 小时血清胰岛素 & $\mu$U/ml & 缺失 \\
+    BMI & 身体质量指数 & kg/m$^2$ & 缺失 \\
+    DPF & 糖尿病家族遗传指数 & 指数 & 保留 \\
+    Age & 年龄 & 岁 & 保留 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
 
 \subsection{缺失值与异常值处理}
-\placeholder{说明不合理 0 值处理、中位数填充、IQR 异常值裁剪。注意写清 IQR 边界基于训练集有效观测值计算。}
+
+原始数据没有显式空值，
+但存在由不合理 0 值体现的隐式缺失。
+其中，\texttt{Glucose} 有 5 个 0，
+\texttt{BloodPressure} 有 35 个 0，
+\texttt{SkinThickness} 有 227 个 0，
+\texttt{Insulin} 有 374 个 0，
+\texttt{BMI} 有 11 个 0，
+若直接删除这些样本，会显著减少可用数据。
+由于中位数比均值更不易受偏态分布和极端值影响，
+因此，本文先将上述 5 个变量中的不合理 0 值标记为缺失，
+再使用训练集拟合得到的中位数填充。
+训练集填充值为 Glucose 117.0、BloodPressure 72.0、
+SkinThickness 29.0、Insulin 125.0 和 BMI 32.4。
+
+在完成中位数填充后，本文采用 IQR 规则处理异常值。
+IQR 方法对特征分布形状没有正态性假设，
+适合 Pima 数据集中偏态较明显的生理指标。
+对每个特征，仅使用训练集计算第一四分位数 $Q_1$、
+第三四分位数 $Q_3$ 和四分位距
+\[
+  IQR = Q_3 - Q_1 .
+\]
+下界定义为 $\max(Q_1 - 1.5IQR, 0)$，
+上界定义为 $Q_3 + 1.5IQR$。
+随后使用训练集得到的边界对训练集、验证集和测试集进行一致裁剪，
+以避免验证集和测试集信息参与参数估计。
+表 \ref{tab:iqr_bounds} 给出了最终使用的裁剪边界。
+
+\begin{table}[t]
+  \caption{训练集拟合得到的 IQR 裁剪边界}
+  \label{tab:iqr_bounds}
+  \centering
+  \scriptsize
+  \begin{tabular}{lrr}
+    \toprule
+    特征 & 下界 & 上界 \\
+    \midrule
+    Pregnancies & 0.00 & 13.50 \\
+    Glucose & 38.75 & 200.75 \\
+    BloodPressure & 40.00 & 104.00 \\
+    SkinThickness & 1.00 & 57.00 \\
+    Insulin & 0.00 & 355.50 \\
+    BMI & 13.80 & 50.60 \\
+    Diabetes Pedigree & 0.00 & 1.2325 \\
+    Age & 0.00 & 65.25 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
 
 \subsection{数据划分与标准化}
-\placeholder{说明 train/validation/test 划分比例、分层抽样、StandardScaler 标准化，以及避免数据泄露的做法。}
 
-\subsection{图表占位}
-\placeholder{放类别分布图、特征分布图、相关性热力图。图片建议来自 \texttt{figures/class\_distribution.png}、\texttt{figures/feature\_distribution.png}、\texttt{figures/correlation\_heatmap.png}。}
+数据划分采用分层抽样，随机种子为 42。
+首先划分 20\% 样本作为测试集，
+再从剩余样本中划分 20\% 作为验证集。
+最终训练集、验证集和测试集比例约为 64\%、16\% 和 20\%，
+样本量和类别分布如表 \ref{tab:data_split} 所示。
+由于阳性样本约占 35\%，
+分层抽样可以保持各子集的阳性/阴性比例接近原始数据。
+验证集用于模型选择和调参，
+测试集保留作最终评估，以减少调参过程对测试集的过拟合。
+
+\begin{table}[t]
+  \caption{分层划分后的样本量与类别分布}
+  \label{tab:data_split}
+  \centering
+  \scriptsize
+  \begin{tabular}{lrrr}
+    \toprule
+    数据集 & 总样本数 & 0 类 & 1 类 \\
+    \midrule
+    训练集 & 491 & 320 & 171 \\
+    验证集 & 123 & 80 & 43 \\
+    测试集 & 154 & 100 & 54 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+标准化使用训练集拟合的均值和标准差完成。
+Logistic Regression、SVM、KNN 和神经网络等模型对特征尺度敏感，
+因此统一尺度有助于减少量纲差异对训练的影响。
+验证集、测试集和待预测样本只使用训练集拟合得到的参数进行变换，
+从而避免数据泄漏。
+
+\subsection{探索性分析}
+
+图 \ref{fig:feature_distribution} 展示了各特征在不同标签下的分布，
+并在存在不合理 0 值的变量上标注 0 值数量。
+从图中可以看到，阳性样本在 Glucose 和 BMI 上整体更偏向较高取值，
+Age 和 Pregnancies 也呈现一定右移趋势；
+同时，SkinThickness 和 Insulin 的 0 值数量明显较多，
+这与前文将其作为隐式缺失处理的决定一致。
+
+图 \ref{fig:correlation_heatmap} 由原始数据中的全部数值列计算 Pearson
+相关系数得到，并用热力图展示特征之间以及特征与标签之间的线性相关程度。
+从标签 \texttt{Outcome} 对应的相关系数看，
+Glucose 与标签的相关性最高，约为 0.47；
+BMI、Age、Pregnancies 和 DiabetesPedigreeFunction 也与标签呈正相关，
+但强度弱于 Glucose。
+特征之间的相关性总体不算很高，
+其中 Pregnancies 与 Age、SkinThickness 与 Insulin、
+SkinThickness 与 BMI 的相关性相对更明显。
+这些结果说明血糖、体重相关指标和年龄信息可能对模型预测较有帮助，
+但相关性只反映线性统计关联，
+不能直接解释为医学因果关系。
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\linewidth]{feature_distribution.png}
+  \caption{原始特征分布及不同类别对比}
+  \label{fig:feature_distribution}
+\end{figure}
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\linewidth]{correlation_heatmap.png}
+  \caption{原始特征与标签的相关性热力图}
+  \label{fig:correlation_heatmap}
+\end{figure}

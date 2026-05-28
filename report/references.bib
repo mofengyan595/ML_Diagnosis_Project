@@ -1,2 +1,135 @@
-% 参考文献占位。
-% 后续可加入 Khanam & Foo 2021、Stacking Ensemble 2024、Pima 数据集说明及其他中文论文。
+@misc{uci_pima,
+  author       = {{National Institute of Diabetes and Digestive and Kidney Diseases}},
+  title        = {{Pima Indians Diabetes Database}},
+  howpublished = {{UCI Machine Learning Repository}},
+  year         = {1990},
+  note         = {Dataset description; 768 instances, 8 attributes plus class}
+}
+
+@article{khanamComparisonMachineLearning2021,
+  title = {A Comparison of Machine Learning Algorithms for Diabetes Prediction},
+  author = {Khanam, Jobeda Jamal and Foo, Simon Y.},
+  year = 2021,
+  month = dec,
+  journal = {ICT Express},
+  volume = {7},
+  number = {4},
+  pages = {432--439},
+  issn = {24059595},
+  doi = {10.1016/j.icte.2021.02.004},
+  urldate = {2026-05-28},
+  abstract = {Diabetes is a disease that has no permanent cure; hence early detection is required. Data mining, machine learning (ML) algorithms, and Neural Network (NN) methods are used in diabetes prediction in our research. We used the Pima Indian Diabetes (PID) dataset for our research, collected from the UCI Machine Learning Repository. The dataset contains information about 768 patients and their corresponding nine unique attributes. We used seven ML algorithms on the dataset to predict diabetes. We found that the model with Logistic Regression (LR) and Support Vector Machine (SVM) works well on diabetes prediction. We built the NN model with a different hidden layer with various epochs and observed the NN with two hidden layers provided 88.6\% accuracy.},
+  langid = {english},
+}
+
+@article{rezaImprovingDiabetesDisease2024,
+  title = {Improving Diabetes Disease Patients Classification Using Stacking Ensemble Method with {{PIMA}} and Local Healthcare Data},
+  author = {Reza, Md Shamim and Amin, Ruhul and Yasmin, Rubia and Kulsum, Woomme and Ruhi, Sabba},
+  year = 2024,
+  month = jan,
+  journal = {Heliyon},
+  volume = {10},
+  number = {2},
+  pages = {e24536},
+  issn = {24058440},
+  doi = {10.1016/j.heliyon.2024.e24536},
+  urldate = {2026-05-28},
+  abstract = {Diabetes mellitus, a chronic metabolic disorder, continues to be a major public health issue around the world. It is estimated that one in every two diabetics is undiagnosed. Early diagnosis and management of diabetes can also prevent or delay the onset of complications. With the help of a variety of machine learning and deep learning models, stacking algorithms, and other techniques, our study's goal is to detect diseases early. In this study, we propose two stackingbased models for diabetes disease classification using a combination of the PIMA Indian diabetes dataset, simulated data, and additional data collected from a local healthcare facility. We use both the classical and deep neural network stacking ensemble methods to combine the predictions of multiple classification models and improve classification accuracy and robustness. In the evaluation protocol, we used both the train-test and cross-validation (CV) techniques to validate our proposed model. The highest accuracy is obtained by stacking ensemble with three NN architectures, resulting in an accuracy of 95.50 \%, precision of 94 \%, recall of 97 \%, and f1score of 96 \% using 5-fold CV on simulation study. The stacked accuracy obtained from ML algorithms for the Pima Indian Diabetes dataset is 75.03 \% using the train-test split protocol, while the accuracy obtained from the CV protocol is 77.10 \% on the stacked model. The range of performance scores that outperformed the CV protocol 2.23 \%--12 \%. Our proposed method achieves a high accuracy range from 92 \% to 95 \%, precision, recall, and F1-score ranges from 88 \% to 96 \% using classical and deep neural network (NN)-based stacking method on the primary dataset. The proposed dataset and ensemble method could be useful in the early detection and treatment of diabetes, as well as in the advancement of machine learning and data analysis techniques in the healthcare industry.},
+  langid = {english},
+}
+
+@article{LiJiaSiJiYuJiQiXueXiDeTangNiaoBingYuCeJiSHAPTeZhengFenXi2023,
+  title = {{基于机器学习的糖尿病预测及SHAP特征分析}},
+  author = {{李佳思}},
+  year = 2023,
+  journal = {智能计算机与应用},
+  volume = {13},
+  number = {1},
+  pages = {153--157},
+  urldate = {2026-05-28},
+  abstract = {为了提升糖尿病诊断的准确率，找出糖尿病的影响因素，将机器学习算法应用于糖尿病诊断，建立糖尿病预测模型，为医生提供决策指导。实验使用UCI数据库中的皮马印第安人糖尿病数据集，首先对数据进行缺失值填充、异常值处理与标准化等预处理；在经过预处理后的数据集上建立单分类模型和集成学习模型，并通过5折交叉验证准确率和AUC值评估各模型的预测性能。结果表明，XGBoost算法的预测效果最好，分类准确率达到77.83\%,AUC值为0.822。最后，引入SHAP模型增强模型的可解释性，归纳得出葡萄糖浓度、身体质量指数和年龄对糖尿病预测具有重要影响。},
+  langid = {chinese},
+  keywords = {,SHAP},
+  annotation = {dbcode: CJFQ\\
+dbname: CJFDLAST2023\\
+filename: DLXZ202301026\\
+Fund: 国家自然科学基金(62072296)；\\
+CNKICite: 28},
+}
+
+@article{ChengLuPingJiYuJiQiXueXiDe2XingTangNiaoBingFaBingYinSuFenXiYuYuCe2025,
+  title = {{基于机器学习的2型糖尿病发病因素分析与预测}},
+  author = {{成路平} and {吴思扬} and {路波}},
+  year = 2025,
+  journal = {医学信息学杂志},
+  volume = {46},
+  number = {9},
+  pages = {17--24},
+  urldate = {2026-05-28},
+  abstract = {目的/意义构建多维数据挖掘预测框架，提升2型糖尿病风险预测准确率与临床决策效率。方法/过程基于Pima数据集，通过单、双、多变量分析筛选核心因素，采用逻辑回归、随机森林、支持向量机、极限梯度提升和轻量梯度提升机5种机器学习模型建模，经网格搜索与交叉验证优化参数。结果/结论识别出血糖水平、身体质量指数、年龄等核心风险因素，与传统循证结论相符；随机森林预测准确率达0.870 1,整体性能最优。通过数据挖掘与特征筛选，降低了数据采集成本，缩短了风险因素识别周期，揭示了变量间非线性交互机制，为社区高危人群普筛提供了高效工具。},
+  langid = {chinese},
+  keywords = {,2},
+  annotation = {dbcode: CJFQ\\
+dbname: CJFDLAST2025\\
+filename: YXQB202509003\\
+Fund: 陕西省高水平中医药重点学科(中医内分泌病学)(项目编号：SX2YY2DXK-2024006)； 陕西省卫生健康科研创新能力提升计划(项目编号：2025YF-41)；},
+}
+
+@article{smithUsingADAPLearning1988a,
+  title = {Using the {{ADAP Learning Algorithm}} to {{Forecast}} the {{Onset}} of {{Diabetes Mellitus}}},
+  author = {Smith, Jack W. and Everhart, J.E. and Dickson, W.C. and Knowler, W.C. and Johannes, R.S.},
+  year = 1988,
+  month = nov,
+  journal = {Proceedings of the Annual Symposium on Computer Application in Medical Care},
+  pages = {261--265},
+  issn = {0195-4210},
+  urldate = {2026-05-28},
+  abstract = {Neural networks or connectionist models for parallel processing are not new. However, a resurgence of interest in the past half decade has occurred. In part, this is related to a better understanding of what are now referred to as hidden nodes. These algorithms are considered to be of marked value in pattern recognition problems. Because of that, we tested the ability of an early neural network model, ADAP, to forecast the onset of diabetes mellitus in a high risk population of Pima Indians. The algorithm's performance was analyzed using standard measures for clinical tests: sensitivity, specificity, and a receiver operating characteristic curve. The crossover point for sensitivity and specificity is 0.76. We are currently further examining these methods by comparing the ADAP results with those obtained from logistic regression and linear perceptron models using precisely the same training and forecasting sets. A description of the algorithm is included.},
+  langid = {american},
+  pmcid = {PMC2245318},
+  pmid = {null},
+}
+
+@article{sisodiaPredictionDiabetesUsing2018a,
+  title = {Prediction of {{Diabetes}} Using {{Classification Algorithms}}},
+  author = {Sisodia, Deepti and Sisodia, Dilip Singh},
+  year = 2018,
+  month = jan,
+  journal = {Procedia Computer Science},
+  series = {International {{Conference}} on {{Computational Intelligence}} and {{Data Science}}},
+  volume = {132},
+  pages = {1578--1585},
+  issn = {1877-0509},
+  doi = {10.1016/j.procs.2018.05.122},
+  urldate = {2026-05-28},
+  abstract = {Diabetes is considered as one of the deadliest and chronic diseases which causes an increase in blood sugar. Many complications occur if diabetes remains untreated and unidentified. The tedious identifying process results in visiting of a patient to a diagnostic center and consulting doctor. But the rise in machine learning approaches solves this critical problem. The motive of this study is to design a model which can prognosticate the likelihood of diabetes in patients with maximum accuracy. Therefore three machine learning classification algorithms namely Decision Tree, SVM and Naive Bayes are used in this experiment to detect diabetes at an early stage. Experiments are performed on Pima Indians Diabetes Database (PIDD) which is sourced from UCI machine learning repository. The performances of all the three algorithms are evaluated on various measures like Precision, Accuracy, F-Measure, and Recall. Accuracy is measured over correctly and incorrectly classified instances. Results obtained show Naive Bayes outperforms with the highest accuracy of 76.30\% comparatively other algorithms. These results are verified using Receiver Operating Characteristic (ROC) curves in a proper and systematic manner.},
+  langid = {american},
+  keywords = {Accuracy,Decision Tree,Diabetes,Machine Learning,Naive Byes,SVM},
+}
+
+@article{zouPredictingDiabetesMellitus2018,
+  title = {Predicting {{Diabetes Mellitus With Machine Learning Techniques}}},
+  author = {Zou, Quan and Qu, Kaiyang and Luo, Yamei and Yin, Dehui and Ju, Ying and Tang, Hua},
+  year = 2018,
+  month = nov,
+  journal = {Frontiers in Genetics},
+  volume = {9},
+  publisher = {Frontiers},
+  issn = {1664-8021},
+  doi = {10.3389/fgene.2018.00515},
+  urldate = {2026-05-28},
+  abstract = {Diabetes mellitus is a chronic disease characterized by hyperglycemia. It may cause many complications. Diabetes mellitus is a chronic disease characterized by hyperglycemia. It may cause many complications. According to the growing morbidity in recent years, in 2040, the world's diabetic patients will reach 642 million, which means that one of the ten adults in the future is suffering from diabetes. There is no doubt that this alarming figure needs great attention. With the rapid development of machine learning, machine learning has been applied to many aspects of medical health. In this study, we used decision tree, random forest and neural network to predict diabetes mellitus. The dataset is the hospital physical examination data in Luzhou, China. It contains 14 attributes. In this study, 5-fold cross validation was used to examine the models. In order to verity the universal applicability of the methods, we chose some methods that have the better performance to conduct independent test experiments. We randomly selected 68994 healthy people and diabetic patients' data respectively as training set. Due to the data unbalance, we randomly extracted 5 times data. And the result is the average of these five experiments. In this study, we used principal component analysis (PCA) and minimum redundancy maximum relevance (mRMR) to reduce the dimensionality. The results showed that prediction with random forest could reach the highest accuracy (ACC=0.8084) when all the attributes were used.},
+  langid = {american},
+  keywords = {decision tree,Diabetes Mellitus,Feature ranking,machine   learning,neural network,random forest},
+}
+
+@inproceedings{lundbergUnifiedApproachInterpreting2017,
+  title = {A {{Unified Approach}} to {{Interpreting Model Predictions}}},
+  booktitle = {Advances in {{Neural Information Processing Systems}}},
+  author = {Lundberg, Scott M and Lee, Su-In},
+  year = 2017,
+  volume = {30},
+  publisher = {Curran Associates, Inc.},
+  urldate = {2026-05-28},
+  langid = {american},
+}

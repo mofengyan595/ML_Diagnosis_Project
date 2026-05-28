@@ -1,7 +1,22 @@
 \section{相关工作}
 
-\placeholder{Pima 数据集相关研究。简述已有论文如何使用该数据集进行糖尿病分类和模型比较。}
+Smith 等较早使用 ADAP 学习算法研究 Pima 数据集上的糖尿病发病预测，
+并采用敏感性、特异性和 ROC 曲线等临床测试指标进行分析
+\cite{smithUsingADAPLearning1988a}。
+Sisodia 等比较了 Decision Tree、SVM 和 Naive Bayes，
+Zou 等则结合特征降维比较了 Decision Tree、Random Forest 和神经网络；
+这些工作说明 Pima 数据集常被用于传统分类器和树模型比较
+\cite{sisodiaPredictionDiabetesUsing2018a,zouPredictingDiabetesMellitus2018}。
 
-\placeholder{模型对比研究。占位引用 Logistic Regression、SVM、Random Forest、神经网络、Stacking Ensemble 等方法。}
+Khanam 和 Foo 系统比较了多种机器学习和神经网络模型，
+并强调缺失值填补、异常值处理、特征选择和归一化会影响最终结果
+\cite{khanamComparisonMachineLearning2021}。
+Reza 等进一步使用 stacking 方法融合传统机器学习模型和神经网络模型，
+并比较训练/测试划分与交叉验证协议\cite{rezaImprovingDiabetesDisease2024}。
+这些研究为本文选择多模型比较、统一预处理和多指标评估提供了依据。
 
-\placeholder{评价指标与实验设置。占位说明已有研究常用 train-test split、交叉验证、Accuracy、Precision、Recall、F1 和 AUC。}
+在可解释性方面，Lundberg 和 Lee 提出的 SHAP 方法可通过特征边际贡献解释模型输出
+\cite{lundbergUnifiedApproachInterpreting2017}。
+李佳思和成路平等的研究均指出 Glucose、BMI 和 Age 等变量在糖尿病预测中较为重要
+\cite{LiJiaSiJiYuJiQiXueXiDeTangNiaoBingYuCeJiSHAPTeZhengFenXi2023,
+ChengLuPingJiYuJiQiXueXiDe2XingTangNiaoBingFaBingYinSuFenXiYuYuCe2025}。

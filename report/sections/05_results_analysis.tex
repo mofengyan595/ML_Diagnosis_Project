@@ -1,0 +1,92 @@
+\section{结果与分析}
+
+\subsection{模型性能比较}
+
+表 \ref{tab:model_comparison} 是最终报告的核心结果表。
+目前项目文件中仅存在 Logistic Regression 基准模型结果，
+因此只填写该行的真实指标；
+其他模型必须在训练结果产生后再补充，不能编造数值。
+
+\begin{table*}[t]
+  \caption{模型性能比较表}
+  \label{tab:model_comparison}
+  \centering
+  \scriptsize
+  \begin{tabular}{lcccccccccc}
+    \toprule
+    模型
+    & Val Acc. & Val Prec. & Val Recall & Val F1 & Val AUC
+    & Test Acc. & Test Prec. & Test Recall & Test F1 & Test AUC \\
+    \midrule
+    Logistic Regression
+    & 0.7642 & 0.6346 & 0.7674 & 0.6947 & 0.8709
+    & 0.7273 & 0.5938 & 0.7037 & 0.6441 & 0.8154 \\
+    KNN & \multicolumn{10}{c}{待训练并补充} \\
+    Decision Tree & \multicolumn{10}{c}{待训练并补充} \\
+    Random Forest & \multicolumn{10}{c}{待训练并补充} \\
+    SVM & \multicolumn{10}{c}{待训练并补充} \\
+    XGBoost/MLP & \multicolumn{10}{c}{可选，按实际完成情况补充或删除} \\
+    \bottomrule
+  \end{tabular}
+\end{table*}
+
+基准模型在测试集上的 ROC AUC 为 0.8154，
+说明其概率排序能力达到可用水平；
+但测试集 Recall 为 0.7037，仍存在漏判阳性样本的风险。
+后续模型选择应重点观察复杂模型是否能在不显著牺牲 Precision 的前提下
+提高 Recall、F1-score 和 ROC AUC。
+
+\placeholder{补充多模型比较结论。
+需要回答：最佳模型是谁、是否明显优于 Logistic Regression、
+是否存在 Precision/Recall 取舍、最终 Demo 为什么选择该模型。}
+
+\subsection{误判与 ROC 分析}
+
+当前基准模型在验证集上的混淆矩阵为：
+TN=61、FP=19、FN=10、TP=33；
+在测试集上为：
+TN=74、FP=26、FN=16、TP=38。
+从筛查任务角度看，16 个测试集假阴性意味着真实阳性样本被判断为阴性，
+这是后续模型优化时应重点减少的错误类型。
+
+\placeholder{补充最佳模型的混淆矩阵热力图和 ROC 曲线。
+如果已生成多模型 ROC 曲线，可在此比较各模型 AUC 和曲线形态。}
+
+\subsection{特征解释}
+
+当前可用的解释结果来自 Logistic Regression 基准模型。
+图 \ref{fig:baseline_feature_importance} 展示了标准化系数绝对值排序。
+Glucose、BMI、DiabetesPedigreeFunction、Pregnancies 和 Age 位于前五位；
+其中 Glucose、BMI 和 Age 与相关研究中强调的重要因素基本一致
+\cite{LiJiaSiJiYuJiQiXueXiDeTangNiaoBingYuCeJiSHAPTeZhengFenXi2023,
+ChengLuPingJiYuJiQiXueXiDe2XingTangNiaoBingFaBingYinSuFenXiYuYuCe2025}。
+需要注意的是，线性模型系数只反映当前数据划分和模型假设下的统计关联，
+不能解释为医学因果关系。
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\linewidth]{baseline_feature_importance.png}
+  \caption{Logistic Regression 基准模型特征影响排序}
+  \label{fig:baseline_feature_importance}
+\end{figure}
+
+\placeholder{若最终模型为 Random Forest、XGBoost 或其他非线性模型，
+在此替换或补充特征重要性、置换重要性或 SHAP 图。}
+
+\subsection{系统演示}
+
+Demo 系统接收与数据集一致的 8 个输入特征，
+并复用训练阶段的缺失值填充、IQR 裁剪和标准化流程。
+系统输出阳性预测概率、风险等级和简要解释。
+风险等级按概率划分：
+低于 0.35 为低风险，
+位于 $[0.35,0.65)$ 为中风险，
+不低于 0.65 为高风险。
+解释文本会提示血糖、BMI、年龄、血压或糖尿病家族遗传指数等较突出的输入因素。
+
+\placeholder{补充 Gradio Demo 截图。
+建议至少展示一个低风险样例和一个高风险样例，
+并说明最终 Demo 使用的模型名称。}
+
+该系统仅用于机器学习课程项目展示，
+其输出不能替代医生诊断或真实临床决策。

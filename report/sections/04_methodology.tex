@@ -1,13 +1,67 @@
-\section{方法}
+\section{方法与实验设置}
 
 \subsection{整体流程}
-\placeholder{放 Pipeline 流程图：Dataset -> Preprocessing -> Split -> Model Training -> Evaluation -> Prediction Demo。}
 
-\subsection{基准模型}
-\placeholder{介绍 Logistic Regression baseline，包括 class weight、输入特征和输出概率。}
+本文采用统一流程完成模型比较：
+原始数据先经过缺失值处理、异常值裁剪、标准化和分层划分，
+随后在相同训练集、验证集和测试集上训练并评估不同模型。
+验证集用于模型选择和超参数调优，
+测试集仅用于最终性能报告。
 
-\subsection{对比模型}
-\placeholder{为 KNN、Decision Tree、Random Forest、SVM、XGBoost 或 MLP 预留小段落。后续按实际完成模型保留或删除。}
+\placeholder{补充整体 Pipeline 图。
+建议展示 Dataset $\rightarrow$ Preprocessing $\rightarrow$
+Train/Validation/Test Split $\rightarrow$ Model Training/Tuning
+$\rightarrow$ Evaluation $\rightarrow$ Demo。}
 
-\subsection{系统 Demo}
-\placeholder{介绍 Gradio Demo 的输入、预测结果、风险等级和解释输出。可作为加分创新点。}
+\subsection{模型选择}
+
+当前已完成 Logistic Regression 基准模型：
+使用 \texttt{class\_weight="balanced"}、最大迭代次数 1000、
+随机种子 42，并将其作为可解释的性能下限。
+后续模型比较应在同一数据划分和同一预处理输出上完成。
+表 \ref{tab:model_zoo} 给出了建议保留的模型类型及其作用。
+
+\begin{table}[t]
+  \caption{候选模型与选择动机}
+  \label{tab:model_zoo}
+  \centering
+  \scriptsize
+  \begin{tabular}{p{0.24\linewidth}p{0.37\linewidth}p{0.29\linewidth}}
+    \toprule
+    模型 & 选择动机 & 关键参数 \\
+    \midrule
+    Logistic Regression & 可解释基准，建立性能下限 & class\_weight, C \\
+    KNN & 距离型非参数方法 & n\_neighbors, weights \\
+    Decision Tree & 规则清晰，便于解释 & max\_depth, min\_samples\_split \\
+    Random Forest & Bagging 集成，降低方差 & n\_estimators, max\_depth \\
+    SVM & 间隔最大化分类器 & C, kernel, gamma \\
+    XGBoost/MLP & 可选增强模型 & 按实际实现补充 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\placeholder{根据实际完成情况补充各模型的训练代码和参数。
+如果某个模型没有训练，不要在最终结果表中填写虚构指标。}
+
+\subsection{超参数调优协议}
+
+多模型阶段应使用验证集或交叉验证进行超参数选择。
+若采用 GridSearchCV 或 RandomizedSearchCV，
+需要报告搜索范围、交叉验证折数、选择指标和最优参数。
+对于糖尿病筛查任务，调参时不宜只优化 Accuracy，
+应同时关注 Recall、F1-score 和 ROC AUC。
+
+\placeholder{补充实际调参方法和搜索空间。
+例如 KNN 的邻居数、SVM 的 $C$ 和 \texttt{gamma}、
+Random Forest 的树数量和深度等。}
+
+\subsection{评价指标}
+
+糖尿病预测是类别不平衡二分类问题，
+单一 Accuracy 可能掩盖阳性样本漏判。
+因此本文报告 Accuracy、Precision、Recall、F1-score 和 ROC AUC。
+其中 Recall 衡量真实阳性样本被正确识别的比例；
+在筛查场景中，假阴性意味着潜在高风险个体被漏掉，
+因此 Recall 和 F1-score 比单纯 Accuracy 更需要关注。
+ROC AUC 不依赖单一分类阈值，
+用于衡量模型对阳性样本的概率排序能力。
