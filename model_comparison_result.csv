@@ -1,0 +1,11 @@
+﻿model,split,accuracy,precision,recall,f1,roc_auc
+Logistic Regression,validation,0.7642,0.6346,0.7674,0.6947,0.8709
+Logistic Regression,test,0.7273,0.5938,0.7037,0.6441,0.8154
+KNN,validation,0.7805,0.7105,0.6279,0.6667,0.8581
+KNN,test,0.7273,0.6154,0.5926,0.6038,0.7675
+Decision Tree,validation,0.7886,0.7429,0.6047,0.6667,0.7461
+Decision Tree,test,0.6948,0.5714,0.5185,0.5437,0.6543
+Random Forest,validation,0.7967,0.7368,0.6512,0.6914,0.8365
+Random Forest,test,0.7338,0.6444,0.537,0.5859,0.8275
+SVM,validation,0.7967,0.6667,0.8372,0.7423,0.8759
+SVM,test,0.7468,0.6087,0.7778,0.6829,0.8157
