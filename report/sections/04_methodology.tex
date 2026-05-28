@@ -7,11 +7,93 @@
 随后在相同训练集、验证集和测试集上训练并评估不同模型。
 验证集用于模型选择和超参数调优，
 测试集仅用于最终性能报告。
+图 \ref{fig:system_pipeline} 展示了离线实验流程与在线问诊系统推理流程之间的关系。
 
-\placeholder{补充整体 Pipeline 图。
-建议展示 Dataset $\rightarrow$ Preprocessing $\rightarrow$
+\begin{figure*}[t]
+  \centering
+  \begin{tikzpicture}[
+    font=\scriptsize,
+    node distance=5.8mm and 7.2mm,
+    >=Stealth,
+    mainnode/.style={
+      draw=black!70,
+      very thick,
+      align=center,
+      minimum width=22mm,
+      minimum height=9.5mm,
+      fill=blue!4,
+      inner sep=2pt
+    },
+    subnode/.style={
+      draw=black!65,
+      thick,
+      align=center,
+      minimum width=20mm,
+      minimum height=8mm,
+      fill=white,
+      inner sep=2pt
+    },
+    flow/.style={->, thick, draw=black!75},
+    branch/.style={->, thick, draw=black!60}
+  ]
+    \node[mainnode] (raw) {原始\\数据集};
+    \node[mainnode, right=of raw] (prep) {数据\\预处理};
+    \node[mainnode, right=of prep] (split) {数据划分\\Train/Val/Test};
+    \node[mainnode, right=of split] (model) {建立\\预测模型};
+    \node[mainnode, right=of model] (eval) {模型性能\\评价};
+    \node[mainnode, right=of eval] (deploy) {系统推理\\风险展示};
+
+    \node[subnode, above=of prep] (missing) {缺失值填充\\异常值处理};
+    \node[subnode, below=of prep] (scale) {IQR 裁剪\\标准化};
+    \node[subnode, above=of model] (single) {单分类模型\\LR/KNN/SVM};
+    \node[subnode, below=of model] (ensemble) {集成学习模型\\RF/XGBoost};
+    \node[subnode, above=of eval] (metrics) {Accuracy\\F1/AUC};
+    \node[subnode, below=of eval] (analysis) {ROC 曲线\\混淆矩阵};
+    \node[subnode, above=of deploy] (artifact) {保存模型\\预处理对象};
+    \node[subnode, below=of deploy] (demo) {Gradio 问诊\\概率解释};
+
+    \draw[flow] (raw) -- (prep);
+    \draw[flow] (prep) -- (split);
+    \draw[flow] (split) -- (model);
+    \draw[flow] (model) -- (eval);
+    \draw[flow] (eval) -- (deploy);
+
+    \draw[branch] (missing) -- (prep);
+    \draw[branch] (scale) -- (prep);
+    \draw[branch] (single) -- (model);
+    \draw[branch] (ensemble) -- (model);
+    \draw[branch] (metrics) -- (eval);
+    \draw[branch] (analysis) -- (eval);
+    \draw[branch] (artifact) -- (deploy);
+    \draw[branch] (demo) -- (deploy);
+
+  \end{tikzpicture}
+  \caption{糖尿病风险预测系统总体技术路线}
+  \label{fig:system_pipeline}
+\end{figure*}
+
+整体流程可以概括为
+Dataset $\rightarrow$ Preprocessing $\rightarrow$
 Train/Validation/Test Split $\rightarrow$ Model Training/Tuning
-$\rightarrow$ Evaluation $\rightarrow$ Demo。}
+$\rightarrow$ Evaluation $\rightarrow$ System Demonstration。
+其中，预处理阶段与第 \ref{tab:iqr_bounds} 表所述方法保持一致：
+先将不合理 0 值标记为缺失，再仅基于训练集拟合中位数填充器、
+IQR 裁剪边界和标准化器。
+这些预处理参数在训练完成后被保存为独立对象，
+并在验证、测试和系统预测阶段重复使用。
+因此，系统端接收到的单条用户输入不会直接进入分类模型，
+而是先按照训练阶段相同的特征顺序和变换规则完成清洗、裁剪与标准化。
+该设计能够保证模型训练阶段与系统应用阶段的数据处理逻辑一致，
+减少由于人工输入原始指标而带来的分布偏移。
+
+在系统展示阶段，本文将实验阶段选定的分类模型与上述预处理对象共同封装。
+系统界面只负责收集用户输入并展示预测结果，
+核心预测逻辑由独立的预测模块完成：
+首先根据 8 个特征构造单样本输入表，
+随后调用保存的预处理对象完成数据变换，
+最后由训练好的分类模型输出阳性概率。
+这种模块化设计将数据处理、模型训练和交互展示解耦，
+既便于复现实验流程，也便于在模型更新后保持系统界面和推理接口稳定。
 
 \subsection{模型选择}
 
