@@ -8,12 +8,11 @@
   "threshold_selection_rule": "choose threshold on validation set by f1, requiring recall >= 0.7 when possible",
   "generalization_guard": "prefer models with threshold train-validation f1 gap <= 0.12",
   "f1_generalization_gap": 0.0,
-  "used_b_model_results": false,
+  "used_b_model_results": true,
+  "b_model_results_file": "model_comparison_result.csv",
   "candidate_models": [
-    "logistic_regression",
-    "random_forest",
     "svm",
-    "knn"
+    "logistic_regression"
   ],
   "best_cv_roc_auc": 0.8425,
   "best_params": {

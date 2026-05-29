@@ -9,6 +9,7 @@ from sklearn.model_selection import GridSearchCV, StratifiedKFold
 
 from evaluation_utils import (
     BASE_DIR,
+    B_MODEL_COMPARISON_RESULT_PATH,
     BEST_MODEL_PATH,
     BEST_PARAMS_PATH,
     DEFAULT_CLASSIFICATION_THRESHOLD,
@@ -27,7 +28,7 @@ from evaluation_utils import (
 )
 
 
-DEFAULT_TUNING_MODELS = ["logistic_regression", "random_forest", "svm", "knn"]
+DEFAULT_TUNING_MODELS = ["svm", "random_forest", "logistic_regression", "knn"]
 TOP_MODELS_FROM_B = 2
 SCORING = "roc_auc"
 CV_SPLITS = 5
@@ -35,12 +36,20 @@ MIN_VALIDATION_RECALL = 0.70
 MAX_F1_GENERALIZATION_GAP = 0.12
 
 
+def _find_b_result_path() -> tuple[Any | None, str | None]:
+    for path in [B_MODEL_COMPARISON_RESULT_PATH, MODEL_RESULTS_PATH]:
+        if path.exists():
+            return path, path.name
+    return None, None
+
+
 def _select_models_from_b_results(candidates: dict[str, dict[str, Any]]) -> list[str]:
-    if not MODEL_RESULTS_PATH.exists():
+    result_path, result_name = _find_b_result_path()
+    if result_path is None:
         return []
 
     try:
-        result_df = pd.read_csv(MODEL_RESULTS_PATH, encoding="utf-8-sig")
+        result_df = pd.read_csv(result_path, encoding="utf-8-sig")
     except Exception as exc:
         print(f"读取成员 B 结果失败，使用默认候选模型。原因: {exc}")
         return []
@@ -59,8 +68,14 @@ def _select_models_from_b_results(candidates: dict[str, dict[str, Any]]) -> list
         print("成员 B 结果表缺少可排序指标列，使用默认候选模型。")
         return []
 
-    if "dataset" in result_df.columns:
-        dataset_values = result_df["dataset"].astype(str).str.lower()
+    split_column = None
+    for candidate_column in ["split", "dataset"]:
+        if candidate_column in result_df.columns:
+            split_column = candidate_column
+            break
+
+    if split_column is not None:
+        dataset_values = result_df[split_column].astype(str).str.lower()
         validation_df = result_df[dataset_values.isin(["validation", "val"])]
         if not validation_df.empty:
             result_df = validation_df
@@ -78,7 +93,7 @@ def _select_models_from_b_results(candidates: dict[str, dict[str, Any]]) -> list
         .head(TOP_MODELS_FROM_B)
         .tolist()
     )
-    print(f"检测到成员 B 的 {MODEL_RESULTS_PATH.name}，将优先调参: {selected}")
+    print(f"检测到成员 B 的 {result_name}，将优先调参: {selected}")
     return selected
 
 
@@ -250,7 +265,8 @@ def main() -> None:
             f"prefer models with threshold train-validation f1 gap <= {MAX_F1_GENERALIZATION_GAP}"
         ),
         "f1_generalization_gap": round(float(best_row["f1_generalization_gap"]), 4),
-        "used_b_model_results": MODEL_RESULTS_PATH.exists(),
+        "used_b_model_results": _find_b_result_path()[0] is not None,
+        "b_model_results_file": _find_b_result_path()[1],
         "candidate_models": selected_model_keys,
         "best_cv_roc_auc": round(float(best_row["best_cv_roc_auc"]), 4),
         "best_params": json.loads(best_row["best_params"]),

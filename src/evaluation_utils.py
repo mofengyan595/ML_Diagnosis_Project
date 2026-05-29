@@ -20,6 +20,7 @@ FIGURES_DIR = BASE_DIR / "figures"
 MODELS_DIR = BASE_DIR / "models"
 
 MODEL_RESULTS_PATH = BASE_DIR / "model_results.csv"
+B_MODEL_COMPARISON_RESULT_PATH = BASE_DIR / "model_comparison_result.csv"
 TUNING_RESULTS_PATH = BASE_DIR / "tuning_results.csv"
 BEST_PARAMS_PATH = BASE_DIR / "best_params.json"
 FINAL_METRICS_PATH = BASE_DIR / "final_metrics.csv"
