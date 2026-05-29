@@ -82,7 +82,7 @@ IQR 方法对特征分布形状没有正态性假设，
   \label{tab:iqr_bounds}
   \centering
   \scriptsize
-  \begin{tabular}{lrr}
+  \begin{tabular*}{\linewidth}{@{\extracolsep{\fill}}lrr@{}}
     \toprule
     特征 & 下界 & 上界 \\
     \midrule
@@ -95,7 +95,7 @@ IQR 方法对特征分布形状没有正态性假设，
     Diabetes Pedigree & 0.00 & 1.2325 \\
     Age & 0.00 & 65.25 \\
     \bottomrule
-  \end{tabular}
+  \end{tabular*}
 \end{table}
 
 \subsection{数据划分与标准化}
@@ -115,7 +115,7 @@ IQR 方法对特征分布形状没有正态性假设，
   \label{tab:data_split}
   \centering
   \scriptsize
-  \begin{tabular}{lrrr}
+  \begin{tabular*}{\linewidth}{@{\extracolsep{\fill}}lrrr@{}}
     \toprule
     数据集 & 总样本数 & 0 类 & 1 类 \\
     \midrule
@@ -123,7 +123,7 @@ IQR 方法对特征分布形状没有正态性假设，
     验证集 & 123 & 80 & 43 \\
     测试集 & 154 & 100 & 54 \\
     \bottomrule
-  \end{tabular}
+  \end{tabular*}
 \end{table}
 
 标准化使用训练集拟合的均值和标准差完成。
