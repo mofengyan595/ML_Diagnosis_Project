@@ -6,11 +6,13 @@ from pathlib import Path
 import joblib
 import numpy as np
 import pandas as pd
-from sklearn.ensemble import RandomForestClassifier
+from lightgbm import LGBMClassifier
+from sklearn.ensemble import GradientBoostingClassifier, RandomForestClassifier
 from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_score, roc_auc_score
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.svm import SVC
 from sklearn.tree import DecisionTreeClassifier
+from xgboost import XGBClassifier
 
 
 TARGET_COLUMN = "Outcome"
@@ -95,6 +97,9 @@ def build_models() -> dict[str, object]:
             n_estimators=100,
         ),
         "SVM": SVC(probability=True, random_state=RANDOM_STATE, class_weight="balanced"),
+        "Gradient Boosting": GradientBoostingClassifier(random_state=RANDOM_STATE),
+        "XGBoost": XGBClassifier(random_state=RANDOM_STATE, eval_metric="logloss"),
+        "LightGBM": LGBMClassifier(random_state=RANDOM_STATE, verbose=-1),
     }
 
 

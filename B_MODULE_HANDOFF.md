@@ -5,7 +5,7 @@
 本模块完成了成员 B 负责的多模型训练与模型对比工作：
 
 - 读取 A 已处理好的 train/validation/test 数据；
-- 训练 KNN、Decision Tree、Random Forest、SVM 四个候选模型；
+- 训练 KNN、Decision Tree、Random Forest、SVM、Gradient Boosting、XGBoost、LightGBM 七个候选模型；
 - 合并 A 的 Logistic Regression baseline；
 - 在 validation 和 test 集上统一计算 accuracy、precision、recall、f1、roc_auc；
 - 保存模型对比结果；
@@ -41,11 +41,11 @@
 
 - `model_comparison_result.csv`
 
-  保存 Logistic Regression、KNN、Decision Tree、Random Forest、SVM 在 validation/test 上的 accuracy、precision、recall、f1、roc_auc。
+  保存 Logistic Regression、KNN、Decision Tree、Random Forest、SVM、Gradient Boosting、XGBoost、LightGBM 在 validation/test 上的 accuracy、precision、recall、f1、roc_auc。
 
 - `models/trained_models.pkl`
 
-  保存 B 训练得到的候选模型字典，包含 KNN、Decision Tree、Random Forest、SVM。
+  保存 B 训练得到的候选模型字典，包含 KNN、Decision Tree、Random Forest、SVM、Gradient Boosting、XGBoost、LightGBM。
 
 - `figures/model_comparison.png`
 
@@ -93,16 +93,25 @@ python src/compare_models.py
 | Random Forest | test | 0.7338 | 0.6444 | 0.5370 | 0.5859 | 0.8275 |
 | SVM | validation | 0.7967 | 0.6667 | 0.8372 | 0.7423 | 0.8759 |
 | SVM | test | 0.7468 | 0.6087 | 0.7778 | 0.6829 | 0.8157 |
+| Gradient Boosting | validation | 0.7236 | 0.6098 | 0.5814 | 0.5952 | 0.8311 |
+| Gradient Boosting | test | 0.7013 | 0.5952 | 0.4630 | 0.5208 | 0.7959 |
+| XGBoost | validation | 0.7561 | 0.6857 | 0.5581 | 0.6154 | 0.7985 |
+| XGBoost | test | 0.7468 | 0.6596 | 0.5741 | 0.6139 | 0.7967 |
+| LightGBM | validation | 0.7724 | 0.6923 | 0.6279 | 0.6585 | 0.8308 |
+| LightGBM | test | 0.7273 | 0.6304 | 0.5370 | 0.5800 | 0.8002 |
 
 ## 7. 结果分析与给成员 C 的建议
 
-从当前结果看，SVM 在 test 集上的 recall 和 f1 表现最好，适合作为后续重点调参候选模型。Random Forest 的 roc_auc 最高，说明其整体区分正负样本能力较好，也适合后续调参。Logistic Regression baseline 表现稳定，可以作为重要基准。Decision Tree 默认参数下表现相对较弱，不建议作为主要优化对象。
+从当前结果看，SVM 在 test 集上的 recall 和 f1 表现最好，适合作为后续重点调参候选模型。Random Forest 的 roc_auc 最高，说明其整体区分正负样本能力较好，也适合后续调参。XGBoost 的 test 集 accuracy 与 SVM 持平，但 recall 和 f1 低于 SVM；LightGBM 当前表现中等，Gradient Boosting 默认参数下表现相对较弱。Logistic Regression baseline 表现稳定，可以作为重要基准。Decision Tree 默认参数下表现相对较弱，不建议作为主要优化对象。
 
 给成员 C 的建议：
 
 - 重点调参 SVM 和 Random Forest；
+- 如果后续 XGBoost 或 LightGBM 在调参后表现提升，也可以作为成员 C 的候选模型；
 - SVM 可调参数包括 `C`、`kernel`、`gamma`、`class_weight`；
 - Random Forest 可调参数包括 `n_estimators`、`max_depth`、`min_samples_split`、`min_samples_leaf`、`max_features`、`class_weight`；
+- XGBoost 可调参数包括 `n_estimators`、`max_depth`、`learning_rate`、`subsample`、`colsample_bytree`；
+- LightGBM 可调参数包括 `n_estimators`、`num_leaves`、`learning_rate`、`max_depth`、`subsample`；
 - 糖尿病风险预测任务更关注 recall 和 f1，因为漏判高风险样本的代价更高；
 - 后续可以进一步结合 GridSearchCV / RandomizedSearchCV 和阈值调整。
 

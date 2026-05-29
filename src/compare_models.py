@@ -44,11 +44,11 @@ def plot_model_comparison(results_df: pd.DataFrame) -> None:
     values_by_metric = {metric: test_results[metric].astype(float).to_numpy() for metric in PLOT_METRICS}
 
     # Keep the pyplot/tight_layout call lightweight; this environment crashes on ax.bar().
-    plt.figure(figsize=(12, 6))
+    plt.figure(figsize=(16, 6))
     plt.tight_layout()
     plt.close()
 
-    width, height = 1200, 600
+    width, height = 1600, 600
     left, right, top, bottom = 90, 190, 70, 135
     chart_width = width - left - right
     chart_height = height - top - bottom

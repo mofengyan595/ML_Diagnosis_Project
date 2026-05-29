@@ -17,3 +17,5 @@ dependencies:
 
   - pip:
       - gradio>=4.0
+      - xgboost
+      - lightgbm
