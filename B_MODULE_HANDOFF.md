@@ -27,7 +27,31 @@
 - 本模块没有重新划分数据集；
 - 这样保证 B 的模型结果可以和 A 的 Logistic Regression baseline 公平比较。
 
-## 3. 主要代码文件
+## 3. 环境依赖说明
+
+增强版额外依赖：
+
+- `xgboost`
+- `lightgbm`
+
+当前验证版本：
+
+- xgboost 3.2.0
+- lightgbm 4.6.0
+
+如果环境缺少依赖，可以运行：
+
+```bash
+pip install -r requirements.txt
+```
+
+或：
+
+```bash
+conda env update -f environment.yml
+```
+
+## 4. 主要代码文件
 
 - `src/train_models.py`
 
@@ -37,7 +61,7 @@
 
   用于读取 `model_comparison_result.csv`，并生成 `figures/model_comparison.png`。
 
-## 4. 输出文件说明
+## 5. 输出文件说明
 
 - `model_comparison_result.csv`
 
@@ -46,6 +70,8 @@
 - `models/trained_models.pkl`
 
   保存 B 训练得到的候选模型字典，包含 KNN、Decision Tree、Random Forest、SVM、Gradient Boosting、XGBoost、LightGBM。
+  该文件只保存成员 B 训练的 7 个候选模型，不包含 A 的 Logistic Regression baseline。
+  Logistic Regression baseline 只通过 `baseline_result.csv` 合并进 `model_comparison_result.csv`。
 
 - `figures/model_comparison.png`
 
@@ -56,7 +82,7 @@
 - 本模块没有生成 `models/best_model.pkl`。
 - `models/best_model.pkl` 应由成员 C 在调参和最终模型选择后生成。
 
-## 5. 运行方式
+## 6. 运行方式
 
 运行顺序如下：
 
@@ -70,7 +96,7 @@ python src/compare_models.py
 - 先运行 `train_models.py`，生成模型结果和候选模型；
 - 再运行 `compare_models.py`，生成模型对比图。
 
-## 6. 当前模型结果摘要
+## 7. 当前模型结果摘要
 
 根据当前 `model_comparison_result.csv`：
 
@@ -100,12 +126,13 @@ python src/compare_models.py
 | LightGBM | validation | 0.7724 | 0.6923 | 0.6279 | 0.6585 | 0.8308 |
 | LightGBM | test | 0.7273 | 0.6304 | 0.5370 | 0.5800 | 0.8002 |
 
-## 7. 结果分析与给成员 C 的建议
+## 8. 结果分析与给成员 C 的建议
 
 从当前结果看，SVM 在 test 集上的 recall 和 f1 表现最好，适合作为后续重点调参候选模型。Random Forest 的 roc_auc 最高，说明其整体区分正负样本能力较好，也适合后续调参。XGBoost 的 test 集 accuracy 与 SVM 持平，但 recall 和 f1 低于 SVM；LightGBM 当前表现中等，Gradient Boosting 默认参数下表现相对较弱。Logistic Regression baseline 表现稳定，可以作为重要基准。Decision Tree 默认参数下表现相对较弱，不建议作为主要优化对象。
 
 给成员 C 的建议：
 
+- 当前调参优先级建议为：1. SVM；2. Random Forest；3. XGBoost / LightGBM 作为备选增强模型；
 - 重点调参 SVM 和 Random Forest；
 - 如果后续 XGBoost 或 LightGBM 在调参后表现提升，也可以作为成员 C 的候选模型；
 - SVM 可调参数包括 `C`、`kernel`、`gamma`、`class_weight`；
@@ -115,7 +142,7 @@ python src/compare_models.py
 - 糖尿病风险预测任务更关注 recall 和 f1，因为漏判高风险样本的代价更高；
 - 后续可以进一步结合 GridSearchCV / RandomizedSearchCV 和阈值调整。
 
-## 8. 注意事项
+## 9. 注意事项
 
 - 不要重新划分数据集；
 - 不要覆盖 A 的数据处理产物；

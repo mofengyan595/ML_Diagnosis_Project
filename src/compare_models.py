@@ -15,6 +15,12 @@ from PIL import Image, ImageDraw, ImageFont
 RESULT_FILENAME = "model_comparison_result.csv"
 FIGURE_FILENAME = "model_comparison.png"
 PLOT_METRICS = ["accuracy", "recall", "f1", "roc_auc"]
+METRIC_LABELS = {
+    "accuracy": "accuracy",
+    "recall": "recall",
+    "f1": "F1",
+    "roc_auc": "ROC AUC",
+}
 
 
 def get_project_root() -> Path:
@@ -57,12 +63,17 @@ def plot_model_comparison(results_df: pd.DataFrame) -> None:
     image = Image.new("RGB", (width, height), "white")
     draw = ImageDraw.Draw(image)
 
-    try:
-        title_font = ImageFont.truetype("arial.ttf", 24)
-        label_font = ImageFont.truetype("arial.ttf", 16)
-        tick_font = ImageFont.truetype("arial.ttf", 13)
-        value_font = ImageFont.truetype("arial.ttf", 12)
-    except OSError:
+    font_candidates = ["msyh.ttc", "simhei.ttf", "arial.ttf"]
+    for font_name in font_candidates:
+        try:
+            title_font = ImageFont.truetype(font_name, 24)
+            label_font = ImageFont.truetype(font_name, 16)
+            tick_font = ImageFont.truetype(font_name, 13)
+            value_font = ImageFont.truetype(font_name, 12)
+            break
+        except OSError:
+            continue
+    else:
         title_font = label_font = tick_font = value_font = ImageFont.load_default()
 
     colors = {
@@ -72,7 +83,10 @@ def plot_model_comparison(results_df: pd.DataFrame) -> None:
         "roc_auc": "#9333ea",
     }
 
-    draw.text((left, 24), "Model Performance Comparison on Test Set", fill="#111827", font=title_font)
+    title = "测试集模型性能对比"
+    title_box = draw.textbbox((0, 0), title, font=title_font)
+    title_x = left + (chart_width - (title_box[2] - title_box[0])) // 2
+    draw.text((title_x, 24), title, fill="#111827", font=title_font)
     draw.line((left, top, left, axis_bottom), fill="#111827", width=2)
     draw.line((left, axis_bottom, left + chart_width, axis_bottom), fill="#111827", width=2)
     draw.text((8, top + chart_height // 2 - 8), "Score", fill="#111827", font=label_font)
@@ -117,11 +131,11 @@ def plot_model_comparison(results_df: pd.DataFrame) -> None:
 
     legend_x = left + chart_width + 42
     legend_y = top + 14
-    draw.text((legend_x, legend_y - 30), "Metric", fill="#111827", font=label_font)
+    draw.text((legend_x, legend_y - 30), "指标", fill="#111827", font=label_font)
     for index, metric in enumerate(PLOT_METRICS):
         y_pos = legend_y + index * 32
         draw.rectangle((legend_x, y_pos, legend_x + 24, y_pos + 16), fill=colors[metric])
-        draw.text((legend_x + 34, y_pos - 1), metric, fill="#374151", font=tick_font)
+        draw.text((legend_x + 34, y_pos - 1), METRIC_LABELS[metric], fill="#374151", font=tick_font)
 
     figure_path = get_project_root() / "figures" / FIGURE_FILENAME
     figure_path.parent.mkdir(parents=True, exist_ok=True)
