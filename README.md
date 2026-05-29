@@ -46,15 +46,23 @@ python src/train_models.py
 python src/compare_models.py
 ```
 
+运行成员 C 调参与最终评估：
+
+```bash
+python src/tune_model.py
+python src/evaluate_model.py
+python src/explain_model.py
+```
+
 ## 当前进度
 
 | 模块 | 状态 | 当前产物 | 下一步 |
 | --- | --- | --- | --- |
 | 数据理解与预处理 | 已完成 baseline 阶段 | 清洗数据、标准化数据、训练/验证/测试集、数据图表 | 后续成员沿用统一 split |
 | 基准模型 | 已完成 | Logistic Regression baseline、baseline 指标、特征影响排序 | 作为后续模型对比基准 |
-| 多模型训练与对比 | 已完成 | 多模型训练脚本、候选模型字典、模型对比结果表、test 集对比图、B 模块交付说明 | 后续成员 C 重点调参 SVM 和 Random Forest |
-| 调参与最终评估 | 待完成 | 暂无 | 调参、绘制 ROC/混淆矩阵、保存最终模型 |
-| 系统 Demo 与工程整合 | 已接入 baseline | Gradio 页面、预测接口、baseline 模型加载 | 等待 `models/best_model.pkl` 后自动切换最终模型 |
+| 多模型训练与对比 | 已完成 | 多模型训练脚本、候选模型字典、模型对比结果表、test 集对比图 | 作为最终调参候选来源 |
+| 调参与最终评估 | 已完成 | GridSearchCV 调参、最终模型、最佳参数、最终评估表、误判分析、ROC/混淆矩阵/特征重要性图 | 后续补充报告实验分析 |
+| 系统 Demo 与工程整合 | 已接入最终模型 | Gradio 页面、预测接口、最终模型加载、异常输入校验、风险建议 | 后续可补充 Demo 截图 |
 
 ## 项目结构
 
@@ -75,7 +83,7 @@ ML_Diagnosis_Project/
 |   |-- scaler.pkl
 |   |-- baseline_logistic_regression.pkl
 |   |-- trained_models.pkl        # 成员 B 训练得到的候选模型字典
-|   |-- best_model.pkl            # 最终模型，当前尚未生成，后续由成员 C 产出
+|   |-- best_model.pkl            # 成员 C 调参后输出的最终模型
 |-- report/                       # 报告、PPT、展示说明材料
 |-- src/                          # 源代码
 |   |-- data_analysis.py          # 数据探索分析与图表
@@ -83,6 +91,10 @@ ML_Diagnosis_Project/
 |   |-- baseline_model.py         # 基准模型训练与结果输出
 |   |-- train_models.py           # 成员 B 多模型训练与结果输出
 |   |-- compare_models.py         # 成员 B 模型对比图生成
+|   |-- evaluation_utils.py       # 成员 C 评估、调参、路径与模型工具函数
+|   |-- tune_model.py             # 成员 C 参数调优与最终模型保存
+|   |-- evaluate_model.py         # 成员 C 最终指标、预测明细、混淆矩阵与 ROC 曲线
+|   |-- explain_model.py          # 成员 C 特征重要性分析
 |   |-- app.py                    # Gradio 系统 Demo 入口
 |   |-- config.py                 # 路径、字段、模型文件配置
 |   |-- predict.py                # 预测流程与模型加载
@@ -90,6 +102,12 @@ ML_Diagnosis_Project/
 |-- baseline_prediction_details.csv
 |-- baseline_feature_importance.csv
 |-- model_comparison_result.csv   # 成员 B 模型对比结果表
+|-- tuning_results.csv            # 成员 C 调参结果
+|-- best_params.json              # 成员 C 最终模型参数与选择依据
+|-- final_metrics.csv             # 成员 C 最终模型验证集/测试集指标
+|-- final_prediction_details.csv  # 成员 C 最终模型预测明细
+|-- error_analysis.csv            # 成员 C 测试集误判样本分析
+|-- feature_importance.csv        # 成员 C 最终模型特征重要性
 |-- environment.yml
 |-- requirements.txt
 |-- README.md
@@ -155,6 +173,9 @@ figures/feature_distribution.png
 figures/correlation_heatmap.png
 figures/baseline_feature_importance.png
 figures/model_comparison.png
+figures/confusion_matrix.png
+figures/roc_curve.png
+figures/feature_importance.png
 ```
 
 模型与预处理工具：
@@ -165,6 +186,7 @@ models/iqr_bounds.pkl
 models/scaler.pkl
 models/baseline_logistic_regression.pkl
 models/trained_models.pkl
+models/best_model.pkl
 ```
 
 结果表：
@@ -174,6 +196,12 @@ baseline_result.csv
 baseline_prediction_details.csv
 baseline_feature_importance.csv
 model_comparison_result.csv
+tuning_results.csv
+best_params.json
+final_metrics.csv
+final_prediction_details.csv
+error_analysis.csv
+feature_importance.csv
 ```
 
 成员 B 产物：
@@ -192,6 +220,13 @@ figures/model_comparison.png
 | --- | ---: | ---: | ---: | ---: | ---: |
 | validation | 0.7642 | 0.6346 | 0.7674 | 0.6947 | 0.8709 |
 | test | 0.7273 | 0.5938 | 0.7037 | 0.6441 | 0.8154 |
+
+当前最终模型为阈值优化后的 SVM，使用验证集选择分类阈值，最终保存为 `models/best_model.pkl`。
+
+| 数据集 | Accuracy | Precision | Recall | F1 | ROC AUC |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| validation | 0.7886 | 0.6545 | 0.8372 | 0.7347 | 0.8762 |
+| test | 0.7403 | 0.5972 | 0.7963 | 0.6825 | 0.8215 |
 
 ## 各成员下一步
 
@@ -214,11 +249,11 @@ baseline_result.csv
 - 保存候选模型字典 `models/trained_models.pkl`
 - 绘制模型性能对比图 `figures/model_comparison.png`
 
-当前结果显示，SVM 在 test 集 recall 和 F1 上最好，Random Forest 在 test 集 ROC AUC 上最好。后续建议成员 C 重点调参 SVM 和 Random Forest；XGBoost / LightGBM 可作为备选增强模型。
+当前结果显示，SVM 在 test 集 recall 和 F1 上最好，Random Forest 在 test 集 ROC AUC 上最好。成员 C 已基于验证集结果进行最终调参，避免使用测试集参与模型选择。
 
 ### 调参与最终评估
 
-建议继续沿用：
+该模块已完成，沿用：
 
 ```text
 data/train_processed.csv
@@ -226,41 +261,50 @@ data/val_processed.csv
 data/test_processed.csv
 ```
 
-注意：调参阶段不要提前使用测试集，测试集建议只在最终模型确定后使用。
+调参阶段未使用测试集进行模型选择，测试集只用于最终评估。
 
-建议完成：
+已完成：
 
-- 使用 GridSearchCV 或 RandomizedSearchCV 调参
+- 使用 GridSearchCV 调参
+- 使用 5 折 StratifiedKFold 交叉验证
 - 计算 Accuracy、Precision、Recall、F1、ROC AUC
 - 绘制混淆矩阵、ROC 曲线、特征重要性图
-- 给出最终模型选择理由
-- 保存最终模型
+- 基于验证集 F1、Recall 和 ROC AUC 选择最终模型
+- 保存最终模型与最佳参数
 
-最终模型请保存为：
+最终模型已保存为：
 
 ```text
 models/best_model.pkl
 ```
 
-建议新增或维护：
+成员 C 产物：
 
 ```text
-src/evaluate.py
+src/evaluation_utils.py
+src/tune_model.py
+src/evaluate_model.py
+src/explain_model.py
+best_params.json
+tuning_results.csv
+final_metrics.csv
+final_prediction_details.csv
+error_analysis.csv
+feature_importance.csv
 figures/confusion_matrix.png
 figures/roc_curve.png
 figures/feature_importance.png
-report/evaluation_summary.md
 ```
 
 ### 系统整合与展示
 
-系统当前已能加载 baseline 模型。后续只要最终模型保存为：
+系统当前已能加载最终模型：
 
 ```text
 models/best_model.pkl
 ```
 
-页面预测会自动优先使用最终模型。
+页面预测会自动优先使用最终模型，并在预测前检查输入是否明显异常。若血糖、血压、BMI、皮肤厚度、胰岛素等关键医学指标为 0 或超出合理范围，系统会提示修正输入，不会直接输出风险概率。
 
 建议继续补充：
 
@@ -292,12 +336,26 @@ models/scaler.pkl
 
 ```text
 用户输入原始指标
+-> 检查输入范围，明显异常时提示修正
 -> 处理不合理 0 值
 -> 中位数填充
 -> IQR 异常值裁剪（边界基于训练集有效观测值）
 -> 标准化
 -> 模型预测
 ```
+
+当前 Demo 使用的输入校验范围：
+
+| 字段 | 合理范围 | 单位 |
+| --- | ---: | --- |
+| Pregnancies | 0-20 | 次 |
+| Glucose | 40-300 | mg/dL |
+| BloodPressure | 40-220 | mmHg |
+| SkinThickness | 1-100 | mm |
+| Insulin | 1-900 | uU/mL |
+| BMI | 10-70 | kg/m^2 |
+| DiabetesPedigreeFunction | 0.01-3 | - |
+| Age | 18-100 | 岁 |
 
 模型输入特征顺序必须保持一致：
 

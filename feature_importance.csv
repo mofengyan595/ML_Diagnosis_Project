@@ -1,0 +1,9 @@
+﻿feature,feature_cn,importance_mean,importance_std,rank
+Glucose,血糖值,0.155259,0.028923,1
+BMI,BMI,0.033346,0.015392,2
+Pregnancies,怀孕次数,0.023062,0.008418,3
+Age,年龄,0.022883,0.004719,4
+DiabetesPedigreeFunction,糖尿病家族遗传指数,0.011648,0.009175,5
+Insulin,胰岛素,0.005938,0.004032,6
+BloodPressure,血压,0.001438,0.003138,7
+SkinThickness,皮肤厚度,-0.004154,0.003211,8

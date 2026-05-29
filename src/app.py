@@ -4,8 +4,8 @@ from predict import predict_diabetes_risk
 
 
 DEFAULT_SAMPLE = (1, 120, 72, 20, 80, 25.0, 0.5, 35)
-LOW_RISK_SAMPLE = (1, 85, 66, 29, 0, 26.6, 0.351, 31)
-HIGH_RISK_SAMPLE = (6, 148, 72, 35, 0, 33.6, 0.627, 50)
+LOW_RISK_SAMPLE = (1, 85, 66, 29, 80, 26.6, 0.351, 31)
+HIGH_RISK_SAMPLE = (6, 148, 72, 35, 80, 33.6, 0.627, 50)
 
 
 CUSTOM_CSS = """
@@ -23,6 +23,8 @@ CUSTOM_CSS = """
     --medium-bg: #fef3c7;
     --high: #b91c1c;
     --high-bg: #fee2e2;
+    --invalid: #7f1d1d;
+    --invalid-bg: #fff1f2;
 }
 
 .gradio-container {
@@ -136,6 +138,11 @@ CUSTOM_CSS = """
     background: linear-gradient(180deg, #ffffff 0%, var(--high-bg) 100%);
 }
 
+.risk-card.invalid {
+    border-color: #fda4af;
+    background: linear-gradient(180deg, #ffffff 0%, var(--invalid-bg) 100%);
+}
+
 .result-label {
     color: var(--muted);
     font-size: 13px;
@@ -169,6 +176,10 @@ CUSTOM_CSS = """
     color: var(--high);
 }
 
+.risk-card.invalid .risk-name {
+    color: var(--invalid);
+}
+
 .probability {
     font-size: 28px;
     font-weight: 900;
@@ -198,6 +209,10 @@ CUSTOM_CSS = """
 
 .risk-card.high .meter span {
     background: var(--high);
+}
+
+.risk-card.invalid .meter span {
+    background: var(--invalid);
 }
 
 #explanation textarea {
@@ -240,6 +255,8 @@ def _sample_to_outputs(sample: tuple[float, ...]) -> tuple[float, ...]:
 
 
 def _risk_class(level: str) -> str:
+    if level == "输入异常":
+        return "invalid"
     if level == "低风险":
         return "low"
     if level == "中风险":
@@ -248,7 +265,7 @@ def _risk_class(level: str) -> str:
 
 
 def _format_result_card(level: str, probability_text: str) -> str:
-    probability_value = float(probability_text.rstrip("%"))
+    probability_value = 0.0 if probability_text == "无法评估" else float(probability_text.rstrip("%"))
     risk_class = _risk_class(level)
     return f"""
     <div class="risk-card {risk_class}">
@@ -315,7 +332,15 @@ def build_demo() -> gr.Blocks:
                         """
                         - 输入项来自糖尿病预测数据集字段。
                         - 页面会优先加载 `models/best_model.pkl`。
+                        - 预测前会检查关键医学指标，明显异常时会提示修正输入。
                         - 未接入正式模型时，系统使用演示规则函数兜底。
+                        """,
+                        elem_classes="hint",
+                    )
+                    gr.Markdown(
+                        """
+                        输入校验范围：血糖 40-300 mg/dL；血压 40-220 mmHg；皮肤厚度 1-100 mm；
+                        胰岛素 1-900 uU/mL；BMI 10-70 kg/m^2；年龄 18-100 岁。
                         """,
                         elem_classes="hint",
                     )
@@ -324,25 +349,75 @@ def build_demo() -> gr.Blocks:
                 with gr.Row():
                     with gr.Column(elem_classes="panel"):
                         gr.Markdown("基础身体指标", elem_classes="section-title")
-                        gr.Markdown("请根据用户情况调整各项数值。", elem_classes="hint")
-                        pregnancies = gr.Slider(label="怀孕次数", minimum=0, maximum=20, value=1, step=1)
-                        glucose = gr.Slider(label="血糖值", minimum=0, maximum=250, value=120, step=1)
-                        blood_pressure = gr.Slider(label="血压", minimum=0, maximum=150, value=72, step=1)
-                        skin_thickness = gr.Slider(label="皮肤厚度", minimum=0, maximum=100, value=20, step=1)
+                        gr.Markdown("请根据用户情况调整各项数值；医学指标为真实测量值时再进行预测。", elem_classes="hint")
+                        pregnancies = gr.Slider(
+                            label="怀孕次数",
+                            minimum=0,
+                            maximum=20,
+                            value=1,
+                            step=1,
+                            info="有效范围：0-20 次。",
+                        )
+                        glucose = gr.Slider(
+                            label="血糖值 (mg/dL)",
+                            minimum=0,
+                            maximum=300,
+                            value=120,
+                            step=1,
+                            info="有效范围：40-300 mg/dL；低于 40 或高于 300 时会提示输入异常。",
+                        )
+                        blood_pressure = gr.Slider(
+                            label="血压 (mmHg)",
+                            minimum=0,
+                            maximum=220,
+                            value=72,
+                            step=1,
+                            info="有效范围：40-220 mmHg；0 不能作为真实血压输入。",
+                        )
+                        skin_thickness = gr.Slider(
+                            label="皮肤厚度 (mm)",
+                            minimum=0,
+                            maximum=100,
+                            value=20,
+                            step=1,
+                            info="有效范围：1-100 mm；0 通常代表缺失测量。",
+                        )
 
                     with gr.Column(elem_classes="panel"):
                         gr.Markdown("代谢与风险相关指标", elem_classes="section-title")
                         gr.Markdown("系统会综合这些特征生成风险概率和解释。", elem_classes="hint")
-                        insulin = gr.Slider(label="胰岛素", minimum=0, maximum=900, value=80, step=1)
-                        bmi = gr.Slider(label="BMI", minimum=0, maximum=70, value=25.0, step=0.1)
+                        insulin = gr.Slider(
+                            label="胰岛素 (uU/mL)",
+                            minimum=0,
+                            maximum=900,
+                            value=80,
+                            step=1,
+                            info="有效范围：1-900 uU/mL；0 通常代表缺失测量。",
+                        )
+                        bmi = gr.Slider(
+                            label="BMI (kg/m^2)",
+                            minimum=0,
+                            maximum=70,
+                            value=25.0,
+                            step=0.1,
+                            info="有效范围：10-70 kg/m^2；低于 10 或高于 70 时会提示输入异常。",
+                        )
                         diabetes_pedigree = gr.Slider(
                             label="糖尿病家族遗传指数",
                             minimum=0,
                             maximum=3,
                             value=0.5,
                             step=0.01,
+                            info="有效范围：0.01-3。",
                         )
-                        age = gr.Slider(label="年龄", minimum=1, maximum=100, value=35, step=1)
+                        age = gr.Slider(
+                            label="年龄",
+                            minimum=1,
+                            maximum=100,
+                            value=35,
+                            step=1,
+                            info="有效范围：18-100 岁。",
+                        )
 
         input_components = [
             pregnancies,

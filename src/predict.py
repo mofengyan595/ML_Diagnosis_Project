@@ -20,6 +20,27 @@ from config import (
     ZERO_AS_MISSING_FEATURES,
 )
 
+INPUT_VALIDATION_RULES = {
+    "pregnancies": (0, 20, "怀孕次数", "次"),
+    "glucose": (40, 300, "血糖值", "mg/dL"),
+    "blood_pressure": (40, 220, "血压", "mmHg"),
+    "skin_thickness": (1, 100, "皮肤厚度", "mm"),
+    "insulin": (1, 900, "胰岛素", "uU/mL"),
+    "bmi": (10, 70, "BMI", "kg/m^2"),
+    "diabetes_pedigree": (0.01, 3, "糖尿病家族遗传指数", ""),
+    "age": (18, 100, "年龄", "岁"),
+}
+
+
+def validate_patient_input(values: dict[str, float]) -> list[str]:
+    messages = []
+    for feature, (minimum, maximum, label, unit) in INPUT_VALIDATION_RULES.items():
+        value = values[feature]
+        unit_text = f" {unit}" if unit else ""
+        if value < minimum or value > maximum:
+            messages.append(f"{label}为 {value:g}{unit_text}，应位于 {minimum:g}-{maximum:g}{unit_text} 范围内。")
+    return messages
+
 
 def _load_artifact(path: Path) -> Any | None:
     if not path.exists():
@@ -135,11 +156,36 @@ def _key_factors(values: dict[str, float]) -> list[str]:
         factors.append("BMI 偏高")
     if values["age"] >= 50:
         factors.append("年龄较高")
-    if values["blood_pressure"] >= 90:
+    if values["blood_pressure"] >= 140:
         factors.append(f'{FEATURE_LABELS["blood_pressure"]}偏高')
     if values["diabetes_pedigree"] >= 0.8:
         factors.append(f'{FEATURE_LABELS["diabetes_pedigree"]}较高')
     return factors or ["当前输入中没有特别突出的高风险指标"]
+
+
+def _health_advice(level: str, values: dict[str, float]) -> str:
+    advice = []
+    if level == "低风险":
+        advice.append("继续保持规律作息、均衡饮食和适量运动，建议定期关注血糖、血压和体重变化。")
+    elif level == "中风险":
+        advice.append("建议控制精制糖和高热量饮食，增加规律运动，并在近期复查空腹血糖或糖化血红蛋白。")
+    else:
+        advice.append("建议尽快咨询医生或进行正规血糖检查，尤其需要关注空腹血糖、餐后血糖和糖化血红蛋白。")
+
+    if values["glucose"] >= 200:
+        advice.append("当前血糖输入明显偏高，如伴随口渴、多尿、乏力等症状，应及时就医。")
+    elif values["glucose"] >= 140:
+        advice.append("血糖值偏高，建议减少含糖饮料和高糖食物，并进行连续监测。")
+
+    if values["blood_pressure"] >= 180:
+        advice.append("血压输入达到较高水平，若为真实测量值，建议尽快寻求医疗评估。")
+    elif values["blood_pressure"] >= 140:
+        advice.append("血压偏高，建议复测并关注盐摄入、运动和睡眠情况。")
+
+    if values["bmi"] >= 28:
+        advice.append("BMI 偏高，建议逐步控制体重，避免短期极端节食。")
+
+    return "\n".join(f"- {item}" for item in advice)
 
 
 def predict_diabetes_risk(
@@ -163,16 +209,29 @@ def predict_diabetes_risk(
         "age": age,
     }
 
+    validation_messages = validate_patient_input(values)
+    if validation_messages:
+        explanation = (
+            "输入数据存在异常，暂不进行风险评估。\n\n"
+            + "\n".join(f"- {message}" for message in validation_messages)
+            + "\n\n请修正异常输入后重新预测。医学指标不能简单以 0 作为未知值；"
+            "如确实缺少某项检查结果，建议先补充测量或使用接近真实情况的估计值。\n\n"
+            "说明：本系统仅用于机器学习课程项目演示，不能替代医生诊断。"
+        )
+        return "输入异常", "无法评估", explanation
+
     model_result = _predict_with_model(values)
     probability, source_note = model_result or _predict_with_rule(values)
     probability = max(0.0, min(1.0, probability))
     level = _risk_level(probability)
     factors = "、".join(_key_factors(values))
+    advice = _health_advice(level, values)
 
     probability_text = f"{probability * 100:.1f}%"
     explanation = (
         f"风险等级：{level}\n\n"
         f"主要参考因素：{factors}\n\n"
+        f"建议：\n{advice}\n\n"
         f"{source_note}\n\n"
         "说明：本系统仅用于机器学习课程项目演示，不能替代医生诊断。"
     )
