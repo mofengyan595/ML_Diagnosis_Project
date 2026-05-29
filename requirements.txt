@@ -10,5 +10,5 @@ seaborn>=0.12.0
 
 joblib>=1.3.0
 gradio>=4.0.0
-xgboost
-lightgbm
+xgboost>=2.0.0
+lightgbm>=4.0.0
