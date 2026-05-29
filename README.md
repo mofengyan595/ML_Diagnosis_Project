@@ -36,7 +36,14 @@ pip install -r requirements.txt
 检查环境：
 
 ```bash
-python -c "import gradio, pandas, sklearn, joblib; print('ok')"
+python -c "import gradio, pandas, sklearn, joblib, xgboost, lightgbm; print('ok')"
+```
+
+运行成员 B 多模型训练与对比：
+
+```bash
+python src/train_models.py
+python src/compare_models.py
 ```
 
 ## 当前进度
@@ -45,7 +52,7 @@ python -c "import gradio, pandas, sklearn, joblib; print('ok')"
 | --- | --- | --- | --- |
 | 数据理解与预处理 | 已完成 baseline 阶段 | 清洗数据、标准化数据、训练/验证/测试集、数据图表 | 后续成员沿用统一 split |
 | 基准模型 | 已完成 | Logistic Regression baseline、baseline 指标、特征影响排序 | 作为后续模型对比基准 |
-| 多模型训练与对比 | 待完成 | 暂无 | 训练 KNN、Decision Tree、Random Forest、SVM 等 |
+| 多模型训练与对比 | 已完成 | 多模型训练脚本、候选模型字典、模型对比结果表、test 集对比图、B 模块交付说明 | 后续成员 C 重点调参 SVM 和 Random Forest |
 | 调参与最终评估 | 待完成 | 暂无 | 调参、绘制 ROC/混淆矩阵、保存最终模型 |
 | 系统 Demo 与工程整合 | 已接入 baseline | Gradio 页面、预测接口、baseline 模型加载 | 等待 `models/best_model.pkl` 后自动切换最终模型 |
 
@@ -61,23 +68,28 @@ ML_Diagnosis_Project/
 |   |-- val_processed.csv         # 验证集
 |   |-- test_processed.csv        # 测试集
 |-- figures/                      # 图表与系统截图
+|   |-- model_comparison.png       # 成员 B 输出的 test 集模型性能对比图
 |-- models/                       # 预处理工具与模型文件
 |   |-- imputer.pkl
 |   |-- iqr_bounds.pkl
 |   |-- scaler.pkl
 |   |-- baseline_logistic_regression.pkl
-|   |-- best_model.pkl            # 最终模型，后续由调参评估阶段产出
+|   |-- trained_models.pkl        # 成员 B 训练得到的候选模型字典
+|   |-- best_model.pkl            # 最终模型，当前尚未生成，后续由成员 C 产出
 |-- report/                       # 报告、PPT、展示说明材料
 |-- src/                          # 源代码
 |   |-- data_analysis.py          # 数据探索分析与图表
 |   |-- data_process.py           # 数据清洗、划分、标准化
 |   |-- baseline_model.py         # 基准模型训练与结果输出
+|   |-- train_models.py           # 成员 B 多模型训练与结果输出
+|   |-- compare_models.py         # 成员 B 模型对比图生成
 |   |-- app.py                    # Gradio 系统 Demo 入口
 |   |-- config.py                 # 路径、字段、模型文件配置
 |   |-- predict.py                # 预测流程与模型加载
 |-- baseline_result.csv           # 基准模型指标
 |-- baseline_prediction_details.csv
 |-- baseline_feature_importance.csv
+|-- model_comparison_result.csv   # 成员 B 模型对比结果表
 |-- environment.yml
 |-- requirements.txt
 |-- README.md
@@ -142,6 +154,7 @@ figures/class_distribution.png
 figures/feature_distribution.png
 figures/correlation_heatmap.png
 figures/baseline_feature_importance.png
+figures/model_comparison.png
 ```
 
 模型与预处理工具：
@@ -151,6 +164,7 @@ models/imputer.pkl
 models/iqr_bounds.pkl
 models/scaler.pkl
 models/baseline_logistic_regression.pkl
+models/trained_models.pkl
 ```
 
 结果表：
@@ -159,6 +173,17 @@ models/baseline_logistic_regression.pkl
 baseline_result.csv
 baseline_prediction_details.csv
 baseline_feature_importance.csv
+model_comparison_result.csv
+```
+
+成员 B 产物：
+
+```text
+src/train_models.py
+src/compare_models.py
+model_comparison_result.csv
+models/trained_models.pkl
+figures/model_comparison.png
 ```
 
 当前 baseline 指标：
@@ -172,7 +197,7 @@ baseline_feature_importance.csv
 
 ### 多模型训练与对比
 
-建议直接读取：
+该模块已完成。成员 B 直接读取：
 
 ```text
 data/train_processed.csv
@@ -181,20 +206,15 @@ data/test_processed.csv
 baseline_result.csv
 ```
 
-建议完成：
+已完成：
 
-- 训练 KNN、Decision Tree、Random Forest、SVM 等模型
 - 使用相同 train/val/test 划分与 baseline 对比
-- 输出模型对比结果表
-- 绘制模型性能对比图
+- 训练 Logistic Regression baseline、KNN、Decision Tree、Random Forest、SVM、Gradient Boosting、XGBoost、LightGBM
+- 输出模型对比结果表 `model_comparison_result.csv`
+- 保存候选模型字典 `models/trained_models.pkl`
+- 绘制模型性能对比图 `figures/model_comparison.png`
 
-建议新增或维护：
-
-```text
-src/train_models.py
-figures/model_comparison.png
-report/model_comparison.md
-```
+当前结果显示，SVM 在 test 集 recall 和 F1 上最好，Random Forest 在 test 集 ROC AUC 上最好。后续建议成员 C 重点调参 SVM 和 Random Forest；XGBoost / LightGBM 可作为备选增强模型。
 
 ### 调参与最终评估
 
@@ -341,7 +361,7 @@ feature/app
 
 ```bash
 python -c "import pandas as pd; df = pd.read_csv('data/diabetes.csv'); print(df.shape)"
-python -c "import gradio, pandas, sklearn, joblib; print('ok')"
+python -c "import gradio, pandas, sklearn, joblib, xgboost, lightgbm; print('ok')"
 python src/app.py
 ```
 
