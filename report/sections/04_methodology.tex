@@ -97,33 +97,52 @@ IQR 裁剪边界和标准化器。
 
 \subsection{模型选择}
 
-当前已完成 Logistic Regression 基准模型：
-使用 \texttt{class\_weight="balanced"}、最大迭代次数 1000、
-随机种子 42，并将其作为可解释的性能下限。
-后续模型比较应在同一数据划分和同一预处理输出上完成。
-表 \ref{tab:model_zoo} 给出了建议保留的模型类型及其作用。
+本文首先使用 Logistic Regression 作为可解释基准模型：
+设置 \texttt{class\_weight="balanced"}、最大迭代次数 1000、
+随机种子 42，并将其作为后续模型比较的参照。
+在此基础上，多模型比较阶段使用预处理后固定划分的训练集、
+验证集和测试集，不再重复清洗或重新划分数据。
+所有候选模型均只在训练集上拟合，
+并分别在验证集和测试集上使用相同指标进行评估，
+从而保证不同模型之间以及与 Logistic Regression 基准模型之间的公平可比性。
+
+除 Logistic Regression 基准模型外，实验共纳入 7 个候选模型。
+KNN 根据邻近样本的距离和投票结果进行分类；
+Decision Tree 基于特征阈值递归划分样本空间；
+Random Forest 通过 Bagging 方式集成多棵决策树，以降低单树模型的方差；
+SVM 通过最大化分类间隔寻找决策边界；
+Gradient Boosting、XGBoost 和 LightGBM 均属于 Boosting 集成方法，
+通过逐步拟合前一阶段的误差提升分类性能。
+表 \ref{tab:model_zoo} 汇总了基准模型和候选模型的类型及主要设置。
 
 \begin{table}[t]
-  \caption{候选模型与选择动机}
+  \caption{基准模型与候选模型的主要设置}
   \label{tab:model_zoo}
   \centering
   \scriptsize
-  \begin{tabular}{p{0.24\linewidth}p{0.37\linewidth}p{0.29\linewidth}}
+  \setlength{\tabcolsep}{2pt}
+  \begin{tabular}{p{0.25\linewidth}p{0.31\linewidth}p{0.35\linewidth}}
     \toprule
-    模型 & 选择动机 & 关键参数 \\
+    模型 & 类型 & 主要设置 \\
     \midrule
-    Logistic Regression & 可解释基准，建立性能下限 & class\_weight, C \\
-    KNN & 距离型非参数方法 & n\_neighbors, weights \\
-    Decision Tree & 规则清晰，便于解释 & max\_depth, min\_samples\_split \\
-    Random Forest & Bagging 集成，降低方差 & n\_estimators, max\_depth \\
-    SVM & 间隔最大化分类器 & C, kernel, gamma \\
-    XGBoost/MLP & 可选增强模型 & 按实际实现补充 \\
+    Logistic Regression & 线性基准模型 & \texttt{class\_weight=balanced} \\
+    KNN & 距离型非参数模型 & 默认参数 \\
+    Decision Tree & 单棵树模型 & \texttt{random\_state=42}, \texttt{class\_weight=balanced} \\
+    Random Forest & Bagging 集成模型 & \texttt{n\_estimators=100}, \texttt{class\_weight=balanced} \\
+    SVM & 最大间隔分类器 & \texttt{probability=True}, \texttt{class\_weight=balanced} \\
+    Gradient Boosting & Boosting 集成模型 & \texttt{random\_state=42} \\
+    XGBoost & 梯度提升树模型 & \texttt{eval\_metric=logloss} \\
+    LightGBM & 高效梯度提升模型 & \texttt{verbose=-1} \\
     \bottomrule
-  \end{tabular}
+\end{tabular}
 \end{table}
 
-\placeholder{根据实际完成情况补充各模型的训练代码和参数。
-如果某个模型没有训练，不要在最终结果表中填写虚构指标。}
+本文采用统一协议计算 Accuracy、Precision、Recall、F1-score 和 ROC AUC。
+由于糖尿病风险预测属于筛查任务，
+漏判高风险样本可能使潜在阳性个体错过进一步检查，
+因此模型比较不能只关注 Accuracy，
+还应重点观察 Recall 和 F1-score，
+并结合 ROC AUC 衡量模型对正负样本的整体排序能力。
 
 \subsection{超参数调优协议}
 
@@ -141,7 +160,7 @@ Random Forest 的树数量和深度等。}
 
 糖尿病预测是类别不平衡二分类问题，
 单一 Accuracy 可能掩盖阳性样本漏判。
-因此本文报告 Accuracy、Precision、Recall、F1-score 和 ROC AUC。
+因此本文纳入了 Accuracy、Precision、Recall、F1-score 和 ROC AUC作为评价指标。
 其中 Recall 衡量真实阳性样本被正确识别的比例；
 在筛查场景中，假阴性意味着潜在高风险个体被漏掉，
 因此 Recall 和 F1-score 比单纯 Accuracy 更需要关注。

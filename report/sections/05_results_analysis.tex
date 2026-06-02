@@ -2,10 +2,11 @@
 
 \subsection{模型性能比较}
 
-表 \ref{tab:model_comparison} 是最终报告的核心结果表。
-目前项目文件中仅存在 Logistic Regression 基准模型结果，
-因此只填写该行的真实指标；
-其他模型必须在训练结果产生后再补充，不能编造数值。
+表 \ref{tab:model_comparison} 汇总了 Logistic Regression 基准模型
+以及 7 个候选模型在验证集和测试集上的性能。
+所有模型使用相同的预处理结果和固定数据划分，
+并仅使用训练集进行拟合，
+表中结果可用于比较不同模型在基础参数设置下的表现。
 
 \begin{table*}[t]
   \caption{模型性能比较表}
@@ -21,24 +22,74 @@
     Logistic Regression
     & 0.7642 & 0.6346 & 0.7674 & 0.6947 & 0.8709
     & 0.7273 & 0.5938 & 0.7037 & 0.6441 & 0.8154 \\
-    KNN & \multicolumn{10}{c}{待训练并补充} \\
-    Decision Tree & \multicolumn{10}{c}{待训练并补充} \\
-    Random Forest & \multicolumn{10}{c}{待训练并补充} \\
-    SVM & \multicolumn{10}{c}{待训练并补充} \\
-    XGBoost/MLP & \multicolumn{10}{c}{可选，按实际完成情况补充或删除} \\
+    KNN
+    & 0.7805 & 0.7105 & 0.6279 & 0.6667 & 0.8581
+    & 0.7273 & 0.6154 & 0.5926 & 0.6038 & 0.7675 \\
+    Decision Tree
+    & 0.7886 & 0.7429 & 0.6047 & 0.6667 & 0.7461
+    & 0.6948 & 0.5714 & 0.5185 & 0.5437 & 0.6543 \\
+    Random Forest
+    & 0.7967 & 0.7368 & 0.6512 & 0.6914 & 0.8365
+    & 0.7338 & 0.6444 & 0.5370 & 0.5859 & 0.8275 \\
+    SVM
+    & 0.7967 & 0.6667 & 0.8372 & 0.7423 & 0.8759
+    & 0.7468 & 0.6087 & 0.7778 & 0.6829 & 0.8157 \\
+    Gradient Boosting
+    & 0.7236 & 0.6098 & 0.5814 & 0.5952 & 0.8311
+    & 0.7013 & 0.5952 & 0.4630 & 0.5208 & 0.7959 \\
+    XGBoost
+    & 0.7561 & 0.6857 & 0.5581 & 0.6154 & 0.7985
+    & 0.7468 & 0.6596 & 0.5741 & 0.6139 & 0.7967 \\
+    LightGBM
+    & 0.7724 & 0.6923 & 0.6279 & 0.6585 & 0.8308
+    & 0.7273 & 0.6304 & 0.5370 & 0.5800 & 0.8002 \\
     \bottomrule
   \end{tabular}
 \end{table*}
 
-基准模型在测试集上的 ROC AUC 为 0.8154，
-说明其概率排序能力达到可用水平；
-但测试集 Recall 为 0.7037，仍存在漏判阳性样本的风险。
-后续模型选择应重点观察复杂模型是否能在不显著牺牲 Precision 的前提下
-提高 Recall、F1-score 和 ROC AUC。
+\begin{figure*}[t]
+  \centering
+  \includegraphics[width=0.95\textwidth]{model_comparison.png}
+  \caption{不同模型在测试集上的 Accuracy、Recall、F1-score 和 ROC AUC 对比}
+  \label{fig:model_comparison}
+\end{figure*}
 
-\placeholder{补充多模型比较结论。
-需要回答：最佳模型是谁、是否明显优于 Logistic Regression、
-是否存在 Precision/Recall 取舍、最终 Demo 为什么选择该模型。}
+图 \ref{fig:model_comparison} 进一步展示了各模型在测试集上的
+Accuracy、Recall、F1-score 和 ROC AUC。
+由于糖尿病风险预测不能只关注总体预测正确率，
+本文在比较候选模型时重点考察 Recall 和 F1-score，
+并使用 ROC AUC 衡量模型对正负样本的整体排序能力。
+
+在基础参数设置下，SVM 与 XGBoost 的测试集 Accuracy 均为 0.7468，
+并列所有模型中的最高值。
+但 SVM 的 Recall 为 0.7778，F1-score 为 0.6829，
+二者均为所有候选模型中的最高值。
+相比 Logistic Regression 基准模型，
+SVM 的 Recall 从 0.7037 提升至 0.7778，
+F1-score 从 0.6441 提升至 0.6829。
+这说明 SVM 能够识别更多阳性样本，
+在筛查场景下表现出较好的应用潜力。
+
+Random Forest 的测试集 ROC AUC 为 0.8275，
+是所有模型中的最高值，
+说明其概率排序能力较好。
+但其 Recall 仅为 0.5370，
+低于 SVM 和 Logistic Regression，
+表明默认分类阈值下仍可能漏判较多阳性样本。
+该结果说明，Random Forest 具有较好的整体区分能力，
+但仍需要结合参数优化和阈值调整改善阳性样本识别效果。
+
+XGBoost 的测试集 Accuracy 为 0.7468，
+Precision 为 0.6596，
+但 Recall 仅为 0.5741，
+说明其预测相对保守。
+LightGBM 的各项指标较为均衡，
+但没有超过 SVM 的 Recall 和 F1-score，
+也没有超过 Random Forest 的 ROC AUC。
+Decision Tree 和 Gradient Boosting 在默认参数下表现相对较弱。
+综合考虑筛查任务中漏判阳性样本的风险，
+SVM 和 Random Forest 可作为后续优化阶段的重点候选模型，
+并应结合 Recall、F1-score、ROC AUC 和分类阈值进行综合选择。
 
 \subsection{误判与 ROC 分析}
 
