@@ -1,13 +1,24 @@
 \begin{abstract}
-\textbf{待补充：}多模型训练完成后补写摘要。
-摘要应在一段话中概括研究问题、Pima Indians Diabetes 数据集、
-比较的模型、最佳模型及其关键指标、Gradio Demo 和主要结论。
-当前仅已有 Logistic Regression 基准结果，
-不要把基准模型写成最终最佳模型。
+糖尿病风险预测是机器学习在健康管理场景中的典型二分类任务。
+本文基于 Pima Indians Diabetes Database 构建糖尿病风险预测系统，
+首先对不合理 0 值、隐式缺失、异常值和特征尺度进行统一处理，
+并采用分层抽样划分训练集、验证集和测试集。
+在模型实验阶段，本文以 Logistic Regression 作为基准模型，
+进一步比较 KNN、Decision Tree、Random Forest、SVM、
+Gradient Boosting、XGBoost 和 LightGBM 等多种候选模型。
+在最终优化阶段，本文基于前序模型比较结果选择候选模型，
+采用 GridSearchCV 和 5 折 StratifiedKFold 进行超参数调优，
+并结合验证集 F1、Recall 和 ROC AUC 进行分类阈值选择。
+最终模型为阈值优化后的 SVM，测试集 Accuracy、Precision、
+Recall、F1-score 和 ROC AUC 分别为 0.7403、0.5972、0.7963、
+0.6825 和 0.8215。
+与 Logistic Regression 基准模型相比，最终模型在 Recall 和
+F1-score 上取得提升，更符合问诊筛查场景中减少高风险漏判的目标。
+本文还基于 Gradio 构建了交互式问诊 Demo，
+实现单样本风险概率输出、风险等级展示、输入异常校验和简要建议。
 \end{abstract}
 
 \begin{IEEEkeywords}
-\textbf{待补充：}关键词。建议包含：
-糖尿病预测、Pima Indians Diabetes、机器学习、模型比较、
-ROC AUC、Gradio Demo。
+糖尿病预测，Pima Indians Diabetes，机器学习，模型比较，
+超参数调优，ROC AUC，Gradio Demo
 \end{IEEEkeywords}

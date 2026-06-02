@@ -91,6 +91,41 @@ Decision Tree 和 Gradient Boosting 在默认参数下表现相对较弱。
 SVM 和 Random Forest 可作为后续优化阶段的重点候选模型，
 并应结合 Recall、F1-score、ROC AUC 和分类阈值进行综合选择。
 
+\subsection{最终调优结果}
+
+在最终调参阶段，本文没有直接依据测试集结果选择模型，
+而是基于验证集表现筛选候选模型并进行 GridSearchCV 调参。
+本次进入调参的模型为 SVM 和 Logistic Regression。
+调参后，SVM 的最佳参数为 $C=10.0$、\texttt{gamma}=0.01、
+\texttt{class\_weight}=None，
+验证集选择得到的分类阈值为 0.30。
+阈值调整后的最终模型在测试集上的 Accuracy、Precision、Recall、
+F1-score 和 ROC AUC 分别为 0.7403、0.5972、0.7963、0.6825 和 0.8215。
+与 Logistic Regression 基准模型相比，
+最终模型在测试集 Recall 上由 0.7037 提升到 0.7963，
+F1-score 由 0.6441 提升到 0.6825，
+ROC AUC 由 0.8154 提升到 0.8215。
+这表明最终模型更倾向于识别真实阳性样本，
+符合糖尿病风险问诊系统减少高风险漏判的应用目标。
+
+\begin{table}[t]
+  \caption{最终模型与基准模型测试集结果对比}
+  \label{tab:final_vs_baseline}
+  \centering
+  \scriptsize
+  \begin{tabular}{lccc}
+    \toprule
+    指标 & 基准模型 & 最终模型 & 变化 \\
+    \midrule
+    Accuracy & 0.7273 & 0.7403 & +0.0130 \\
+    Precision & 0.5938 & 0.5972 & +0.0034 \\
+    Recall & 0.7037 & 0.7963 & +0.0926 \\
+    F1-score & 0.6441 & 0.6825 & +0.0384 \\
+    ROC AUC & 0.8154 & 0.8215 & +0.0061 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
 \subsection{误判与 ROC 分析}
 
 当前基准模型在验证集上的混淆矩阵为：
@@ -100,8 +135,38 @@ TN=74、FP=26、FN=16、TP=38。
 从筛查任务角度看，16 个测试集假阴性意味着真实阳性样本被判断为阴性，
 这是后续模型优化时应重点减少的错误类型。
 
-\placeholder{补充最佳模型的混淆矩阵热力图和 ROC 曲线。
-如果已生成多模型 ROC 曲线，可在此比较各模型 AUC 和曲线形态。}
+最终模型在测试集上的混淆矩阵为：
+TN=71、FP=29、FN=11、TP=43。
+与基准模型相比，最终模型将测试集假阴性数量由 16 降低到 11，
+说明阈值优化后的 SVM 能识别更多真实阳性样本。
+与此同时，最终模型的 FP 数量为 29，
+说明模型为提升 Recall 付出了一定 Precision 代价。
+这种取舍在问诊提醒场景中是可以接受的：
+系统输出仅用于风险提示和课程展示，
+并不会直接替代医学诊断。
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\linewidth]{confusion_matrix.png}
+  \caption{最终模型在测试集上的混淆矩阵}
+  \label{fig:confusion_matrix}
+\end{figure}
+
+图 \ref{fig:roc_curve} 展示了最终模型在测试集上的 ROC 曲线。
+最终模型测试集 ROC AUC 为 0.8215，
+说明其对阳性样本和阴性样本仍具有较好的概率排序能力。
+由于 ROC AUC 不依赖单一分类阈值，
+该指标可以从整体上反映模型区分能力；
+而 Recall、Precision 和 F1-score 则反映了阈值确定后的实际分类效果。
+本文在最终系统中采用 0.30 作为分类阈值，
+主要是为了在保持可接受总体性能的同时提高高风险样本召回率。
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\linewidth]{roc_curve.png}
+  \caption{最终模型在测试集上的 ROC 曲线}
+  \label{fig:roc_curve}
+\end{figure}
 
 \subsection{特征解释}
 
@@ -121,8 +186,29 @@ ChengLuPingJiYuJiQiXueXiDe2XingTangNiaoBingFaBingYinSuFenXiYuYuCe2025}。
   \label{fig:baseline_feature_importance}
 \end{figure}
 
-\placeholder{若最终模型为 Random Forest、XGBoost 或其他非线性模型，
-在此替换或补充特征重要性、置换重要性或 SHAP 图。}
+在最终模型解释阶段，本文进一步使用 permutation importance
+对阈值优化后的 SVM 进行特征重要性分析，
+结果如图 \ref{fig:final_feature_importance} 所示。
+Permutation importance 衡量打乱某一特征后模型 ROC AUC 的平均下降幅度，
+因此更适合用于解释非线性模型对不同输入变量的依赖程度。
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\linewidth]{feature_importance.png}
+  \caption{最终模型特征重要性（Permutation Importance）}
+  \label{fig:final_feature_importance}
+\end{figure}
+
+最终模型中，Glucose 的重要性均值为 0.155259，
+明显高于其他特征，
+说明血糖值是模型进行糖尿病风险判断时最关键的输入因素。
+BMI、Pregnancies、Age 和 DiabetesPedigreeFunction 也具有较高重要性，
+这与前文探索性分析和基准模型系数排序基本一致。
+Insulin、BloodPressure 和 SkinThickness 的重要性相对较低，
+其中 SkinThickness 的置换重要性均值略为负值，
+可能与该变量缺失比例较高、填充后信息量有限以及测试集样本量较小有关。
+需要强调的是，特征重要性反映模型在当前数据集上的预测依赖，
+不能直接解释为医学因果关系。
 
 \subsection{系统演示}
 
@@ -137,9 +223,14 @@ Insulin、BMI、DiabetesPedigreeFunction 和 Age。
 用于在展示时快速说明低风险和高风险输入在模型输出上的差异。
 
 系统预测流程严格复用实验阶段的预处理协议。
-对于网页端提交的原始指标，系统首先按照训练阶段的规则处理不合理 0 值，
-再使用训练集拟合得到的中位数填充器、IQR 裁剪边界和标准化器进行变换。
-完成预处理后，样本被送入实验阶段选定的分类模型，
+对于网页端提交的原始指标，系统首先检查输入范围。
+当血糖、血压、BMI、皮肤厚度、胰岛素等关键医学指标为 0
+或明显超出合理范围时，
+系统会返回“输入异常 / 无法评估”，
+并提示用户修正输入，而不会输出看似精确的风险概率。
+通过输入校验后，系统再按照训练阶段的规则处理不合理 0 值，
+使用训练集拟合得到的中位数填充器、IQR 裁剪边界和标准化器进行变换。
+完成预处理后，样本被送入最终 SVM 模型，
 模型输出糖尿病阳性的预测概率。
 由于预处理对象和模型对象均由训练阶段保存得到，
 系统端推理与离线实验保持了相同的特征顺序和数据变换方式，
@@ -151,10 +242,11 @@ Insulin、BMI、DiabetesPedigreeFunction 和 Age。
 本文按概率阈值将低于 0.35 的样本标记为低风险，
 将位于 $[0.35,0.65)$ 的样本标记为中风险，
 将不低于 0.65 的样本标记为高风险；
-第三部分是简要解释文本，
-用于提示血糖、BMI、年龄、血压或糖尿病家族遗传指数等较突出的输入因素。
+第三部分是简要解释和建议文本，
+用于提示血糖、BMI、年龄、血压或糖尿病家族遗传指数等较突出的输入因素，
+并给出生活方式或就医检查建议。
 因此，系统展示并不只给出二分类标签，
-而是同时呈现概率、等级和输入因素说明，
+而是同时呈现概率、等级、输入因素说明和风险建议，
 使预测结果更适合课程展示和非技术用户理解。
 
 该系统仅用于机器学习课程项目展示，
