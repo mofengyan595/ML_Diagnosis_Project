@@ -152,9 +152,49 @@ Gradient Boosting、XGBoost 和 LightGBM 均属于 Boosting 集成方法，
 对于糖尿病筛查任务，调参时不宜只优化 Accuracy，
 应同时关注 Recall、F1-score 和 ROC AUC。
 
-\placeholder{补充实际调参方法和搜索空间。
-例如 KNN 的邻居数、SVM 的 $C$ 和 \texttt{gamma}、
-Random Forest 的树数量和深度等。}
+最终调参阶段由成员 C 完成。
+调参脚本读取前序模块输出的 \texttt{model\_comparison\_result.csv}，
+并结合验证集 ROC AUC、F1-score、Recall 和 Accuracy
+筛选进入调参阶段的候选模型。
+本次实现中，SVM 在基础模型比较阶段具有较高的 Recall 和 F1-score，
+更符合筛查场景减少漏判的目标；
+Logistic Regression 则作为可解释基准模型保留用于对照。
+因此最终调参阶段重点优化 SVM 和 Logistic Regression。
+
+调参采用 GridSearchCV，
+交叉验证方式为 5 折 StratifiedKFold，
+划分时设置 \texttt{shuffle=True} 和随机种子 42，
+搜索评分指标为 ROC AUC。
+Logistic Regression 的搜索空间包括
+$C \in \{0.01,0.1,1,10,100\}$、
+\texttt{solver} $\in$ \{\texttt{liblinear}, \texttt{lbfgs}\}、
+\texttt{penalty}=\texttt{l2}
+以及 \texttt{class\_weight} $\in$ \{None, \texttt{balanced}\}。
+SVM 采用 RBF 核，
+搜索空间包括
+$C \in \{0.1,1,10,100\}$、
+\texttt{gamma} $\in$ \{\texttt{scale},0.01,0.1,1\}
+以及 \texttt{class\_weight} $\in$ \{None, \texttt{balanced}\}。
+
+在获得每个候选模型的最优超参数后，
+本文进一步在验证集上搜索分类阈值，
+阈值范围为 0.25 到 0.75，
+步长为 0.01。
+阈值选择以 F1-score 为主要目标，
+并在可能情况下要求验证集 Recall 不低于 0.70。
+考虑到问诊筛查任务中漏判阳性样本的代价较高，
+最终模型选择时采用阈值调整后的验证集 F1-score、Recall
+和 ROC AUC 作为排序依据，
+同时限制训练集和验证集之间的 F1-score 差距，
+以降低过拟合风险。
+
+最终选择的模型为 SVM，
+最优参数为 $C=10.0$、\texttt{gamma}=0.01、
+\texttt{class\_weight}=None，
+验证集上选择的分类阈值为 0.30。
+调参结果保存为 \texttt{tuning\_results.csv}，
+最优参数和模型选择依据保存为 \texttt{best\_params.json}，
+最终模型保存为 \texttt{models/best\_model.pkl}。
 
 \subsection{评价指标}
 
