@@ -2,26 +2,29 @@
 
 \subsection{整体流程}
 
-本文采用统一流程完成模型比较：
-原始数据先经过缺失值处理、异常值裁剪、标准化和分层划分，
-随后在相同训练集、验证集和测试集上训练并评估不同模型。
-验证集用于模型选择和超参数调优，
-测试集仅用于最终性能报告。
+为保证模型比较的公平性和结果评估的独立性，
+本文将数据划分、预处理参数估计、模型训练与最终评估明确分离。
+首先在原始数据上标记缺乏合理医学含义的 0 值，
+随后采用分层抽样得到训练集、验证集和测试集。
+中位数填充器、IQR 裁剪边界和标准化器均仅在训练集上拟合，
+再以相同参数作用于验证集、测试集和系统端待预测样本。
+验证集用于模型筛选、超参数调优和分类阈值选择，
+测试集只用于最终性能报告。
 图 \ref{fig:system_pipeline} 展示了离线实验流程与在线问诊系统推理流程之间的关系。
 
-\begin{figure*}[t]
+\begin{figure*}[!t]
   \centering
   \begin{tikzpicture}[
     font=\scriptsize,
-    node distance=5.8mm and 7.2mm,
+    node distance=5.5mm and 5.0mm,
     >=Stealth,
     mainnode/.style={
       draw=black!70,
       very thick,
       align=center,
-      minimum width=22mm,
+      minimum width=19mm,
       minimum height=9.5mm,
-      fill=blue!4,
+      fill=gray!6,
       inner sep=2pt
     },
     subnode/.style={
@@ -37,105 +40,62 @@
     branch/.style={->, thick, draw=black!60}
   ]
     \node[mainnode] (raw) {原始\\数据集};
-    \node[mainnode, right=of raw] (prep) {数据\\预处理};
-    \node[mainnode, right=of prep] (split) {数据划分\\Train/Val/Test};
-    \node[mainnode, right=of split] (model) {建立\\预测模型};
-    \node[mainnode, right=of model] (eval) {模型性能\\评价};
+    \node[mainnode, right=of raw] (mark) {标记\\隐式缺失};
+    \node[mainnode, right=of mark] (split) {分层划分\\Train/Val/Test};
+    \node[mainnode, right=of split] (fitprep) {训练集拟合\\预处理参数};
+    \node[mainnode, right=of fitprep] (model) {模型训练\\与调参};
+    \node[mainnode, right=of model] (eval) {独立测试\\评估};
     \node[mainnode, right=of eval] (deploy) {系统推理\\风险展示};
 
-    \node[subnode, above=of prep] (missing) {缺失值填充\\异常值处理};
-    \node[subnode, below=of prep] (scale) {IQR 裁剪\\标准化};
-    \node[subnode, above=of model] (single) {单分类模型\\LR/KNN/SVM};
-    \node[subnode, below=of model] (ensemble) {集成学习模型\\RF/XGBoost};
-    \node[subnode, above=of eval] (metrics) {Accuracy\\F1/AUC};
-    \node[subnode, below=of eval] (analysis) {ROC 曲线\\混淆矩阵};
-    \node[subnode, above=of deploy] (artifact) {保存模型\\预处理对象};
-    \node[subnode, below=of deploy] (demo) {Gradio 问诊\\概率解释};
+    \node[subnode, above=of fitprep] (prepdetail) {中位数填充\\IQR/标准化};
+    \node[subnode, below=of fitprep] (reuse) {同一变换\\作用于 Val/Test};
+    \node[subnode, above=of model] (single) {LR/KNN/SVM\\树模型与集成模型};
+    \node[subnode, below=of model] (tuning) {GridSearchCV\\阈值选择};
+    \node[subnode, above=of eval] (metrics) {Accuracy/Recall\\F1/AUC};
+    \node[subnode, below=of deploy] (artifact) {保存模型与\\预处理对象};
 
-    \draw[flow] (raw) -- (prep);
-    \draw[flow] (prep) -- (split);
-    \draw[flow] (split) -- (model);
+    \draw[flow] (raw) -- (mark);
+    \draw[flow] (mark) -- (split);
+    \draw[flow] (split) -- (fitprep);
+    \draw[flow] (fitprep) -- (model);
     \draw[flow] (model) -- (eval);
     \draw[flow] (eval) -- (deploy);
 
-    \draw[branch] (missing) -- (prep);
-    \draw[branch] (scale) -- (prep);
+    \draw[branch] (prepdetail) -- (fitprep);
+    \draw[branch] (reuse) -- (fitprep);
     \draw[branch] (single) -- (model);
-    \draw[branch] (ensemble) -- (model);
+    \draw[branch] (tuning) -- (model);
     \draw[branch] (metrics) -- (eval);
-    \draw[branch] (analysis) -- (eval);
     \draw[branch] (artifact) -- (deploy);
-    \draw[branch] (demo) -- (deploy);
 
   \end{tikzpicture}
   \caption{糖尿病风险预测系统总体技术路线}
   \label{fig:system_pipeline}
 \end{figure*}
 
-整体流程可以概括为
-Dataset $\rightarrow$ Preprocessing $\rightarrow$
-Train/Validation/Test Split $\rightarrow$ Model Training/Tuning
-$\rightarrow$ Evaluation $\rightarrow$ System Demonstration。
-其中，预处理阶段与第 \ref{tab:iqr_bounds} 表所述方法保持一致：
-先将不合理 0 值标记为缺失，再仅基于训练集拟合中位数填充器、
-IQR 裁剪边界和标准化器。
-这些预处理参数在训练完成后被保存为独立对象，
-并在验证、测试和系统预测阶段重复使用。
-因此，系统端接收到的单条用户输入不会直接进入分类模型，
-而是先按照训练阶段相同的特征顺序和变换规则完成清洗、裁剪与标准化。
-该设计能够保证模型训练阶段与系统应用阶段的数据处理逻辑一致，
-减少由于人工输入原始指标而带来的分布偏移。
-
-在系统展示阶段，本文将实验阶段选定的分类模型与上述预处理对象共同封装。
-系统界面只负责收集用户输入并展示预测结果，
-核心预测逻辑由独立的预测模块完成：
-首先根据 8 个特征构造单样本输入表，
-随后调用保存的预处理对象完成数据变换，
-最后由训练好的分类模型输出阳性概率。
-这种模块化设计将数据处理、模型训练和交互展示解耦，
-既便于复现实验流程，也便于在模型更新后保持系统界面和推理接口稳定。
+整体流程可概括为数据清洗、分层划分、训练集拟合预处理、
+模型训练/调参与独立测试评估。
+不合理 0 值、IQR 裁剪和标准化均只在训练集上估计参数，
+再复用于验证集、测试集和系统端单样本输入。
+系统展示阶段将最终模型与预处理对象共同封装，
+保证交互界面中的风险预测与离线实验使用相同的特征顺序和数据变换规则。
 
 \subsection{模型选择}
 
 本文首先使用 Logistic Regression 作为可解释基准模型：
 设置 \texttt{class\_weight="balanced"}、最大迭代次数 1000、
 随机种子 42，并将其作为后续模型比较的参照。
-在此基础上，多模型比较阶段使用预处理后固定划分的训练集、
-验证集和测试集，不再重复清洗或重新划分数据。
+在此基础上，多模型比较阶段使用同一组训练集、验证集和测试集，
+并复用由训练集拟合得到的预处理参数，
+不再重复清洗或重新划分数据。
 所有候选模型均只在训练集上拟合，
 并分别在验证集和测试集上使用相同指标进行评估，
 从而保证不同模型之间以及与 Logistic Regression 基准模型之间的公平可比性。
 
-除 Logistic Regression 基准模型外，实验共纳入 7 个候选模型。
-KNN 根据邻近样本的距离和投票结果进行分类；
-Decision Tree 基于特征阈值递归划分样本空间；
-Random Forest 通过 Bagging 方式集成多棵决策树，以降低单树模型的方差；
-SVM 通过最大化分类间隔寻找决策边界；
-Gradient Boosting、XGBoost 和 LightGBM 均属于 Boosting 集成方法，
-通过逐步拟合前一阶段的误差提升分类性能。
-表 \ref{tab:model_zoo} 汇总了基准模型和候选模型的类型及主要设置。
-
-\begin{table}[t]
-  \caption{基准模型与候选模型的主要设置}
-  \label{tab:model_zoo}
-  \centering
-  \scriptsize
-  \setlength{\tabcolsep}{2pt}
-  \begin{tabular}{p{0.25\linewidth}p{0.31\linewidth}p{0.35\linewidth}}
-    \toprule
-    模型 & 类型 & 主要设置 \\
-    \midrule
-    Logistic Regression & 线性基准模型 & \texttt{class\_weight=balanced} \\
-    KNN & 距离型非参数模型 & 默认参数 \\
-    Decision Tree & 单棵树模型 & \texttt{random\_state=42}, \texttt{class\_weight=balanced} \\
-    Random Forest & Bagging 集成模型 & \texttt{n\_estimators=100}, \texttt{class\_weight=balanced} \\
-    SVM & 最大间隔分类器 & \texttt{probability=True}, \texttt{class\_weight=balanced} \\
-    Gradient Boosting & Boosting 集成模型 & \texttt{random\_state=42} \\
-    XGBoost & 梯度提升树模型 & \texttt{eval\_metric=logloss} \\
-    LightGBM & 高效梯度提升模型 & \texttt{verbose=-1} \\
-    \bottomrule
-\end{tabular}
-\end{table}
+除 Logistic Regression 基准模型外，实验纳入 KNN、Decision Tree、
+Random Forest、SVM、Gradient Boosting、XGBoost 和 LightGBM。
+这些模型覆盖距离方法、线性模型、最大间隔分类器、单树模型和集成学习，
+便于在统一预处理协议下比较不同建模假设。
 
 本文采用统一协议计算 Accuracy、Precision、Recall、F1-score 和 ROC AUC。
 由于糖尿病风险预测属于筛查任务，
@@ -146,20 +106,11 @@ Gradient Boosting、XGBoost 和 LightGBM 均属于 Boosting 集成方法，
 
 \subsection{超参数调优协议}
 
-多模型阶段应使用验证集或交叉验证进行超参数选择。
-若采用 GridSearchCV 或 RandomizedSearchCV，
-需要报告搜索范围、交叉验证折数、选择指标和最优参数。
-对于糖尿病筛查任务，调参时不宜只优化 Accuracy，
-应同时关注 Recall、F1-score 和 ROC AUC。
-
-最终调参阶段由成员 C 完成。
-调参脚本读取前序模块输出的 \texttt{model\_comparison\_result.csv}，
-并结合验证集 ROC AUC、F1-score、Recall 和 Accuracy
-筛选进入调参阶段的候选模型。
-本次实现中，SVM 在基础模型比较阶段具有较高的 Recall 和 F1-score，
-更符合筛查场景减少漏判的目标；
-Logistic Regression 则作为可解释基准模型保留用于对照。
-因此最终调参阶段重点优化 SVM 和 Logistic Regression。
+多模型比较完成后，本文仅依据验证集结果确定调参对象，
+避免测试集信息参与模型选择。
+SVM 在验证集 Recall 和 F1-score 上表现最好，
+Logistic Regression 作为可解释线性基准保留作对照，
+因此最终调参阶段聚焦于这两个模型。
 
 调参采用 GridSearchCV，
 交叉验证方式为 5 折 StratifiedKFold，
@@ -176,17 +127,9 @@ $C \in \{0.1,1,10,100\}$、
 \texttt{gamma} $\in$ \{\texttt{scale},0.01,0.1,1\}
 以及 \texttt{class\_weight} $\in$ \{None, \texttt{balanced}\}。
 
-在获得每个候选模型的最优超参数后，
-本文进一步在验证集上搜索分类阈值，
-阈值范围为 0.25 到 0.75，
-步长为 0.01。
-阈值选择以 F1-score 为主要目标，
-并在可能情况下要求验证集 Recall 不低于 0.70。
-考虑到问诊筛查任务中漏判阳性样本的代价较高，
-最终模型选择时采用阈值调整后的验证集 F1-score、Recall
-和 ROC AUC 作为排序依据，
-同时限制训练集和验证集之间的 F1-score 差距，
-以降低过拟合风险。
+得到最优超参数后，本文在验证集上以 0.01 为步长搜索 0.25--0.75
+范围内的分类阈值，并以 F1-score、Recall 和 ROC AUC 综合排序。
+由于筛查场景更关注减少假阴性，最终阈值选择优先保证较高 Recall。
 
 最终选择的模型为 SVM，
 最优参数为 $C=10.0$、\texttt{gamma}=0.01、
@@ -195,12 +138,13 @@ $C \in \{0.1,1,10,100\}$、
 调参结果保存为 \texttt{tuning\_results.csv}，
 最优参数和模型选择依据保存为 \texttt{best\_params.json}，
 最终模型保存为 \texttt{models/best\_model.pkl}。
+\FloatBarrier
 
 \subsection{评价指标}
 
 糖尿病预测是类别不平衡二分类问题，
 单一 Accuracy 可能掩盖阳性样本漏判。
-因此本文纳入了 Accuracy、Precision、Recall、F1-score 和 ROC AUC作为评价指标。
+因此本文纳入 Accuracy、Precision、Recall、F1-score 和 ROC AUC 作为评价指标。
 其中 Recall 衡量真实阳性样本被正确识别的比例；
 在筛查场景中，假阴性意味着潜在高风险个体被漏掉，
 因此 Recall 和 F1-score 比单纯 Accuracy 更需要关注。

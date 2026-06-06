@@ -11,7 +11,7 @@
 阳性样本占比约为 34.9\%。
 图 \ref{fig:class_distribution} 展示了该类别分布。
 
-\begin{figure}[t]
+\begin{figure}[H]
   \centering
   \includegraphics[width=\linewidth]{class_distribution.png}
   \caption{原始数据集中 \texttt{Outcome} 的类别分布}
@@ -25,7 +25,7 @@
 因此本文将这些 0 值视作缺失或未测量记录
 \cite{khanamComparisonMachineLearning2021,rezaImprovingDiabetesDisease2024}。
 
-\begin{table}[t]
+\begin{table}[!t]
   \caption{Pima 数据集输入特征说明}
   \label{tab:feature_description}
   \centering
@@ -77,7 +77,7 @@ IQR 方法对特征分布形状没有正态性假设，
 以避免验证集和测试集信息参与参数估计。
 表 \ref{tab:iqr_bounds} 给出了最终使用的裁剪边界。
 
-\begin{table}[t]
+\begin{table}[!t]
   \caption{训练集拟合得到的 IQR 裁剪边界}
   \label{tab:iqr_bounds}
   \centering
@@ -110,7 +110,7 @@ IQR 方法对特征分布形状没有正态性假设，
 验证集用于模型选择和调参，
 测试集保留作最终评估，以减少调参过程对测试集的过拟合。
 
-\begin{table}[t]
+\begin{table}[!t]
   \caption{分层划分后的样本量与类别分布}
   \label{tab:data_split}
   \centering
@@ -125,6 +125,14 @@ IQR 方法对特征分布形状没有正态性假设，
     \bottomrule
   \end{tabular*}
 \end{table}
+
+这样的划分比例兼顾了训练样本数量和评估结果的独立性。
+训练集占比最高，用于估计缺失填补、异常值裁剪和标准化参数，
+并承担所有模型的拟合过程；
+验证集用于比较候选模型、选择超参数和调整分类阈值；
+测试集则在模型结构、参数和阈值全部确定后才用于最终报告。
+固定随机种子使后续实验能够在相同数据划分上复现，
+也便于比较不同模型或不同阈值设置带来的性能变化。
 
 标准化使用训练集拟合的均值和标准差完成。
 Logistic Regression、SVM、KNN 和神经网络等模型对特征尺度敏感，
@@ -141,6 +149,13 @@ Age 和 Pregnancies 也呈现一定右移趋势；
 同时，SkinThickness 和 Insulin 的 0 值数量明显较多，
 这与前文将其作为隐式缺失处理的决定一致。
 
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth]{feature_distribution.png}
+  \caption{原始特征分布及不同类别对比}
+  \label{fig:feature_distribution}
+\end{figure}
+
 图 \ref{fig:correlation_heatmap} 由原始数据中的全部数值列计算 Pearson
 相关系数得到，并用热力图展示特征之间以及特征与标签之间的线性相关程度。
 从标签 \texttt{Outcome} 对应的相关系数看，
@@ -154,16 +169,10 @@ SkinThickness 与 BMI 的相关性相对更明显。
 但相关性只反映线性统计关联，
 不能直接解释为医学因果关系。
 
-\begin{figure}[t]
-  \centering
-  \includegraphics[width=\linewidth]{feature_distribution.png}
-  \caption{原始特征分布及不同类别对比}
-  \label{fig:feature_distribution}
-\end{figure}
-
-\begin{figure}[t]
+\begin{figure}[!t]
   \centering
   \includegraphics[width=\linewidth]{correlation_heatmap.png}
   \caption{原始特征与标签的相关性热力图}
   \label{fig:correlation_heatmap}
 \end{figure}
+\FloatBarrier
