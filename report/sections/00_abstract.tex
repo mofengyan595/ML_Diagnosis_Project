@@ -13,9 +13,11 @@ Gradient Boosting、XGBoost 和 LightGBM 等多种候选模型。
 Recall、F1-score 和 ROC AUC 分别为 0.7403、0.5972、0.7963、
 0.6825 和 0.8215。
 与 Logistic Regression 基准模型相比，最终模型在 Recall 和
-F1-score 上取得提升，更符合问诊筛查场景中减少高风险漏判的目标。
-本文还基于 Gradio 构建了交互式问诊 Demo，
-实现单样本风险概率输出、风险等级展示、输入异常校验和简要建议。
+F1-score 上取得提升，在当前固定划分和验证集阈值选择下，
+更符合课程项目中减少高风险漏判的筛查目标。
+本文还基于 Gradio 构建了交互式演示系统，
+实现单样本模型风险分数输出、风险等级展示、输入异常校验和简要建议。
+该风险分数未经概率校准，不能直接解释为真实患病概率。
 \end{abstract}
 
 \begin{IEEEkeywords}

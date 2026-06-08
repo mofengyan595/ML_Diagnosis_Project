@@ -52,7 +52,7 @@
     \node[subnode, above=of model] (single) {LR/KNN/SVM\\树模型与集成模型};
     \node[subnode, below=of model] (tuning) {GridSearchCV\\阈值选择};
     \node[subnode, above=of eval] (metrics) {Accuracy/Recall\\F1/AUC};
-    \node[subnode, below=of deploy] (artifact) {保存模型与\\预处理对象};
+    \node[subnode, below=of deploy] (artifact) {推理流程\\固化};
 
     \draw[flow] (raw) -- (mark);
     \draw[flow] (mark) -- (split);
@@ -135,9 +135,8 @@ $C \in \{0.1,1,10,100\}$、
 最优参数为 $C=10.0$、\texttt{gamma}=0.01、
 \texttt{class\_weight}=None，
 验证集上选择的分类阈值为 0.30。
-调参结果保存为 \texttt{tuning\_results.csv}，
-最优参数和模型选择依据保存为 \texttt{best\_params.json}，
-最终模型保存为 \texttt{models/best\_model.pkl}。
+实验过程保留调参记录、最优参数配置和最终模型对象，
+以支持模型选择过程的复现。
 \FloatBarrier
 
 \subsection{评价指标}
@@ -149,4 +148,4 @@ $C \in \{0.1,1,10,100\}$、
 在筛查场景中，假阴性意味着潜在高风险个体被漏掉，
 因此 Recall 和 F1-score 比单纯 Accuracy 更需要关注。
 ROC AUC 不依赖单一分类阈值，
-用于衡量模型对阳性样本的概率排序能力。
+用于衡量模型对阳性样本和阴性样本的整体区分能力。

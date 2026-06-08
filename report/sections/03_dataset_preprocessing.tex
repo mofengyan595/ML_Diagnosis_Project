@@ -26,7 +26,7 @@
 \cite{khanamComparisonMachineLearning2021,rezaImprovingDiabetesDisease2024}。
 
 \begin{table}[!t]
-  \caption{Pima 数据集输入特征说明}
+  \caption{Pima 数据集输入特征及 0 值处理}
   \label{tab:feature_description}
   \centering
   \scriptsize
@@ -152,7 +152,7 @@ Age 和 Pregnancies 也呈现一定右移趋势；
 \begin{figure}[H]
   \centering
   \includegraphics[width=\linewidth]{feature_distribution.png}
-  \caption{原始特征分布及不同类别对比}
+  \caption{按 Outcome 分组的原始特征分布}
   \label{fig:feature_distribution}
 \end{figure}
 
@@ -172,7 +172,7 @@ SkinThickness 与 BMI 的相关性相对更明显。
 \begin{figure}[!t]
   \centering
   \includegraphics[width=\linewidth]{correlation_heatmap.png}
-  \caption{原始特征与标签的相关性热力图}
+  \caption{原始特征与 Outcome 的 Pearson 相关性热力图}
   \label{fig:correlation_heatmap}
 \end{figure}
 \FloatBarrier
