@@ -1097,11 +1097,8 @@ def run_prediction(
         _format_result_card(level, probability_text),
         _format_explanation(explanation),
         _format_probability_gauge(probability_text, level),
-        gr.update(visible=True),
         _build_radar_plot(values),
-        gr.update(visible=True),
         _build_factor_bar_plot(values),
-        gr.update(visible=True),
         _build_reference_range_plot(values),
     )
 
@@ -1205,10 +1202,10 @@ def build_demo() -> gr.Blocks:
                 predict_button = gr.Button("生成风险评估", variant="primary", elem_id="predict-button")
 
                 with gr.Row(elem_id="analysis-grid"):
-                    with gr.Column(scale=2, elem_classes="visual-panel", elem_id="radar-panel", visible=False) as radar_panel:
-                        radar_plot = gr.HTML()
-                    with gr.Column(scale=5, elem_classes="visual-panel", elem_id="factor-panel", visible=False) as factor_panel:
-                        factor_plot = gr.HTML()
+                    with gr.Column(scale=2, elem_classes="visual-panel", elem_id="radar-panel") as radar_panel:
+                        radar_plot = gr.HTML(_empty_visual_html("个体输入指标雷达图", "点击生成风险评估后显示"))
+                    with gr.Column(scale=5, elem_classes="visual-panel", elem_id="factor-panel") as factor_panel:
+                        factor_plot = gr.HTML(_empty_visual_html("关键风险因素条形图", "点击生成风险评估后显示"))
 
             with gr.Column(scale=5, elem_id="result-column"):
                 with gr.Column(elem_classes="panel"):
@@ -1231,8 +1228,8 @@ def build_demo() -> gr.Blocks:
                     """
                 )
 
-                with gr.Column(elem_classes="visual-panel", elem_id="reference-panel", visible=False) as reference_panel:
-                    reference_plot = gr.HTML()
+                with gr.Column(elem_classes="visual-panel", elem_id="reference-panel") as reference_panel:
+                    reference_plot = gr.HTML(_empty_visual_html("与正常参考范围对比图", "点击生成风险评估后显示"))
 
         input_components = [
             pregnancies,
@@ -1265,13 +1262,11 @@ def build_demo() -> gr.Blocks:
                 result_card,
                 explanation,
                 risk_gauge,
-                radar_panel,
                 radar_plot,
-                factor_panel,
                 factor_plot,
-                reference_panel,
                 reference_plot,
             ],
+            show_progress="hidden",
         )
 
         gr.Markdown(
