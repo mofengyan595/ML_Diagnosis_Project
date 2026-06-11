@@ -2,7 +2,7 @@
 
 \subsection{数据集来源与变量定义}
 
-本文使用 Pima Indians Diabetes Database 进行实验。
+本文实验使用 Pima Indians Diabetes Database。
 该数据集包含 768 条样本、8 个输入特征和 1 个二分类标签，
 所有输入特征均为数值型\cite{uci_pima}。
 标签 \texttt{Outcome} 中，0 表示未检测为糖尿病阳性，
@@ -19,13 +19,8 @@
 \end{figure}
 
 8 个输入变量的含义见表 \ref{tab:feature_description}。
-\texttt{Pregnancies} 的 0 值表示没有怀孕经历，属于合理取值。
-\texttt{Glucose}、\texttt{BloodPressure}、\texttt{SkinThickness}、
-\texttt{Insulin} 和 \texttt{BMI} 的 0 值缺乏合理医学含义，
-因此本文将这些 0 值视作缺失或未测量记录
-\cite{khanamComparisonMachineLearning2021,rezaImprovingDiabetesDisease2024}。
 
-\begin{table}[!t]
+\begin{table}[H]
   \caption{Pima 数据集输入特征及 0 值处理}
   \label{tab:feature_description}
   \centering
@@ -47,6 +42,12 @@
   \end{tabular}
 \end{table}
 
+\texttt{Pregnancies} 的 0 值表示没有怀孕经历，属于合理取值。
+\texttt{Glucose}、\texttt{BloodPressure}、\texttt{SkinThickness}、
+\texttt{Insulin} 和 \texttt{BMI} 的 0 值缺乏合理医学含义，
+因此本文将这些 0 值视作缺失或未测量记录
+\cite{khanamComparisonMachineLearning2021,rezaImprovingDiabetesDisease2024}。
+
 \subsection{缺失值与异常值处理}
 
 原始数据没有显式空值，
@@ -58,7 +59,7 @@
 \texttt{BMI} 有 11 个 0，
 若直接删除这些样本，会显著减少可用数据。
 由于中位数比均值更不易受偏态分布和极端值影响，
-因此，本文先将上述 5 个变量中的不合理 0 值标记为缺失，
+因此本文先将上述 5 个变量中的不合理 0 值标记为缺失，
 再使用训练集拟合得到的中位数填充。
 训练集填充值为 Glucose 117.0、BloodPressure 72.0、
 SkinThickness 29.0、Insulin 125.0 和 BMI 32.4。
@@ -77,7 +78,7 @@ IQR 方法对特征分布形状没有正态性假设，
 以避免验证集和测试集信息参与参数估计。
 表 \ref{tab:iqr_bounds} 给出了最终使用的裁剪边界。
 
-\begin{table}[!t]
+\begin{table}[H]
   \caption{训练集拟合得到的 IQR 裁剪边界}
   \label{tab:iqr_bounds}
   \centering
@@ -105,12 +106,8 @@ IQR 方法对特征分布形状没有正态性假设，
 再从剩余样本中划分 20\% 作为验证集。
 最终训练集、验证集和测试集比例约为 64\%、16\% 和 20\%，
 样本量和类别分布如表 \ref{tab:data_split} 所示。
-由于阳性样本约占 35\%，
-分层抽样可以保持各子集的阳性/阴性比例接近原始数据。
-验证集用于模型选择和调参，
-测试集留到方案确定后进行独立评估，以减少调参过程对测试集的过拟合。
 
-\begin{table}[!t]
+\begin{table}[H]
   \caption{分层划分后的样本量与类别分布}
   \label{tab:data_split}
   \centering
@@ -126,13 +123,18 @@ IQR 方法对特征分布形状没有正态性假设，
   \end{tabular*}
 \end{table}
 
-这样的划分比例兼顾了训练样本数量和评估结果的独立性。
+由于阳性样本约占 35\%，
+分层抽样可以保持各子集的阳性/阴性比例接近原始数据。
+验证集用于模型选择和调参，
+测试集留到方案确定后进行独立评估，以减少调参过程对测试集的过拟合。
+
+该划分比例兼顾了训练样本数量和评估结果的独立性。
 训练集用于估计缺失填补、异常值裁剪和标准化参数，
 并承担所有模型的拟合过程。
 固定随机种子使后续实验能够在相同数据划分上复现，
 也便于比较不同模型或不同阈值设置带来的性能变化。
 
-标准化使用训练集拟合的均值和标准差完成。
+标准化采用训练集拟合的均值和标准差。
 Logistic Regression、SVM、KNN 和神经网络等模型对特征尺度敏感，
 因此统一尺度有助于减少量纲差异对训练的影响。
 其余数据沿用这组参数进行变换，
@@ -142,10 +144,6 @@ Logistic Regression、SVM、KNN 和神经网络等模型对特征尺度敏感，
 
 图 \ref{fig:feature_distribution} 展示了各特征在不同标签下的分布，
 并在存在不合理 0 值的变量上标注 0 值数量。
-从图中可以看到，阳性样本在 Glucose 和 BMI 上整体更偏向较高取值，
-Age 和 Pregnancies 也呈现一定右移趋势；
-同时，SkinThickness 和 Insulin 的 0 值数量明显较多，
-这与前文将其作为隐式缺失处理的决定一致。
 
 \begin{figure}[H]
   \centering
@@ -154,8 +152,21 @@ Age 和 Pregnancies 也呈现一定右移趋势；
   \label{fig:feature_distribution}
 \end{figure}
 
+从图中可以看到，阳性样本在 Glucose 和 BMI 上整体更偏向较高取值，
+Age 和 Pregnancies 也呈现一定右移趋势；
+同时，SkinThickness 和 Insulin 的 0 值数量明显较多，
+这与前文将其作为隐式缺失处理的决定一致。
+
 图 \ref{fig:correlation_heatmap} 由原始数据中的全部数值列计算 Pearson
 相关系数得到，并用热力图展示特征之间以及特征与标签之间的线性相关程度。
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth]{correlation_heatmap.png}
+  \caption{原始特征与 Outcome 的 Pearson 相关性热力图}
+  \label{fig:correlation_heatmap}
+\end{figure}
+
 从标签 \texttt{Outcome} 对应的相关系数看，
 Glucose 与标签的相关性最高，约为 0.47；
 BMI、Age、Pregnancies 和 DiabetesPedigreeFunction 也与标签呈正相关，
@@ -166,11 +177,4 @@ SkinThickness 与 BMI 的相关性相对更明显。
 这些结果说明血糖、体重相关指标和年龄信息可能对模型预测较有帮助，
 但相关性只反映线性统计关联，
 不能直接解释为医学因果关系。
-
-\begin{figure}[!t]
-  \centering
-  \includegraphics[width=\linewidth]{correlation_heatmap.png}
-  \caption{原始特征与 Outcome 的 Pearson 相关性热力图}
-  \label{fig:correlation_heatmap}
-\end{figure}
 \FloatBarrier

@@ -49,9 +49,9 @@
   \end{tabular*}
 \end{table*}
 
-图 \ref{fig:model_comparison} 进一步展示了各模型在测试集上的
+图 \ref{fig:model_comparison} 展示了各模型在测试集上的
 Accuracy、Recall、F1-score 和 ROC AUC。
-由于糖尿病风险预测不能只关注总体预测正确率，
+糖尿病风险预测不能只看总体预测正确率，
 本文在比较候选模型时重点考察 Recall 和 F1-score，
 并使用 ROC AUC 衡量模型对正负样本的整体排序能力。
 
@@ -71,7 +71,7 @@ Random Forest 的 ROC AUC 最高，为 0.8275，
 但 Recall 仅为 0.5370，说明其排序能力较好而默认阈值下漏判较多。
 XGBoost 的 Precision 较高但 Recall 偏低，LightGBM 表现较均衡，
 Decision Tree 和 Gradient Boosting 相对较弱。
-在后续调参中，本文只依据验证集结果筛选候选模型：
+后续调参只依据验证集结果筛选候选模型：
 SVM 在验证集 Recall 和 F1-score 上表现最好，
 因此作为主要调参对象；
 Logistic Regression 则作为可解释线性基准保留作对照。
@@ -109,10 +109,9 @@ khanamComparisonMachineLearning2021}。
 这样既保留了不同模型的实验对照价值，
 也使最终决策标准与系统的使用目标保持一致。
 
-\Needspace{10\baselineskip}
 \subsection{最终调优结果}
 
-在最终调参阶段，本文没有直接依据测试集结果选择模型，
+在调参阶段，本文没有直接依据测试集结果选择模型，
 而是基于验证集表现筛选候选模型并进行 GridSearchCV 调参。
 本次进入调参的模型为 SVM 和 Logistic Regression。
 两者交叉验证 ROC AUC 接近；调参完成后，
@@ -121,7 +120,12 @@ khanamComparisonMachineLearning2021}。
 在这一规则下，SVM 在 Recall 和 F1-score 上更优，
 更符合筛查任务中优先降低漏判风险的目标。
 
-\begin{table}[!htbp]
+表 \ref{tab:tuning_candidate_selection} 显示，SVM 在阈值 0.30 下取得
+0.8372 的验证集 Recall 和 0.7347 的 F1-score。
+该阈值体现了风险筛查任务中对假阴性错误的更高敏感性，
+即在可接受的假阳性增加下尽量减少高风险样本漏判。
+
+\begin{table}[H]
   \caption{调参候选模型的验证集性能比较}
   \label{tab:tuning_candidate_selection}
   \centering
@@ -136,11 +140,6 @@ khanamComparisonMachineLearning2021}。
     \bottomrule
   \end{tabular*}
 \end{table}
-
-表 \ref{tab:tuning_candidate_selection} 显示，SVM 在阈值 0.30 下取得
-0.8372 的验证集 Recall 和 0.7347 的 F1-score。
-该阈值体现了风险筛查任务中对假阴性错误的更高敏感性，
-即在可接受的假阳性增加下尽量减少高风险样本漏判。
 
 阈值选择严格在验证集上完成，测试集仅用于独立性能评估，
 以避免根据测试结果反复修改模型而产生信息泄露。
@@ -157,7 +156,15 @@ khanamComparisonMachineLearning2021}。
 阈值调整后的最终模型在测试集上的 Accuracy、Precision、Recall、
 F1-score 和 ROC AUC 分别为 0.7403、0.5972、0.7963、0.6825 和 0.8215。
 
-\begin{table}[!htbp]
+表 \ref{tab:final_vs_baseline} 显示，最终模型相较基准模型 Recall
+提升 0.0926，F1-score 提升 0.0384，符合减少高风险漏判的筛查目标。
+同时，ROC AUC 仅提升 0.0061，
+说明最终收益主要体现在验证集阈值 0.30 对分类决策的调整，
+而不是模型排序能力的大幅提升。
+由于当前结果来自一次固定分层划分，
+这些改进仍需要重复划分、bootstrap 置信区间或统计检验进一步验证稳定性。
+
+\begin{table}[H]
   \caption{最终模型与基准模型的测试集性能比较}
   \label{tab:final_vs_baseline}
   \centering
@@ -175,58 +182,47 @@ F1-score 和 ROC AUC 分别为 0.7403、0.5972、0.7963、0.6825 和 0.8215。
   \end{tabular*}
 \end{table}
 
-表 \ref{tab:final_vs_baseline} 显示，最终模型相较基准模型 Recall
-提升 0.0926，F1-score 提升 0.0384，符合减少高风险漏判的筛查目标。
-同时，ROC AUC 仅提升 0.0061，
-说明最终收益主要体现在验证集阈值 0.30 对分类决策的调整，
-而不是模型排序能力的大幅提升。
-由于当前结果来自一次固定分层划分，
-这些改进仍需要重复划分、bootstrap 置信区间或统计检验进一步验证稳定性。
-
-\Needspace{10\baselineskip}
 \subsection{误判与 ROC 分析}
 
-当前基准模型在验证集上的混淆矩阵为：
+基准模型在验证集上的混淆矩阵为：
 TN=61、FP=19、FN=10、TP=33；
 在测试集上为：
 TN=74、FP=26、FN=16、TP=38。
-如图 \ref{fig:error_roc}(a) 所示，最终模型在测试集上的混淆矩阵为：
+如图 \ref{fig:confusion_matrix} 所示，最终模型在测试集上的混淆矩阵为：
 TN=71、FP=29、FN=11、TP=43。
 与基准模型相比，最终模型将测试集假阴性数量由 16 降低到 11，
 说明阈值优化后的 SVM 能识别更多真实阳性样本；
 FP 增加则体现了提升 Recall 所付出的 Precision 代价。
 
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.88\linewidth]{confusion_matrix.png}
+  \caption{最终模型在测试集上的混淆矩阵}
+  \label{fig:confusion_matrix}
+\end{figure}
+
 进一步换算可得，基准模型的假阴性率为 $16/54=0.2963$，
 最终模型降至 $11/54=0.2037$；与此同时，特异度由
 $74/100=0.7400$ 降至 $71/100=0.7100$。
-也就是说，模型以增加 3 个假阳性为代价，减少了 5 个假阴性。
+换言之，模型以增加 3 个假阳性为代价，减少了 5 个假阴性。
 对于强调尽早识别高风险个体的初筛场景，这一交换具有实际意义，
 但若复查成本较高，则仍需结合具体资源重新设定阈值。
 
-\begin{figure*}[!t]
-  \centering
-  \begin{minipage}{0.48\textwidth}
-    \centering
-    \includegraphics[width=\linewidth]{confusion_matrix.png}
-    \small (a) 混淆矩阵
-  \end{minipage}
-  \hfill
-  \begin{minipage}{0.48\textwidth}
-    \centering
-    \includegraphics[width=\linewidth]{roc_curve.png}
-    \small (b) ROC 曲线
-  \end{minipage}
-  \caption{最终模型在测试集上的混淆矩阵与 ROC 曲线}
-  \label{fig:error_roc}
-\end{figure*}
+图 \ref{fig:roc_curve} 展示了最终模型在测试集上的 ROC 曲线。
 
-图 \ref{fig:error_roc}(b) 展示了最终模型在测试集上的 ROC 曲线。
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.88\linewidth]{roc_curve.png}
+  \caption{最终模型在测试集上的 ROC 曲线}
+  \label{fig:roc_curve}
+\end{figure}
+
 最终模型测试集 ROC AUC 为 0.8215，
 说明其对阳性样本和阴性样本仍具有较好的区分能力。
 由于 ROC AUC 不依赖单一分类阈值，
 该指标可以从整体上反映模型区分能力；
 而 Recall、Precision 和 F1-score 则反映了阈值确定后的实际分类效果。
-本文在最终系统中采用 0.30 作为分类阈值，
+系统采用 0.30 作为分类阈值，
 主要是为了在保持可接受总体性能的同时提高高风险样本召回率。
 
 值得注意的是，最终模型相较基准模型的 AUC 仅提高 0.0061，
@@ -249,17 +245,18 @@ ChengLuPingJiYuJiQiXueXiDe2XingTangNiaoBingFaBingYinSuFenXiYuYuCe2025}。
 对于阈值优化后的 SVM，
 本文进一步使用 permutation importance 进行特征重要性分析，
 结果如图 \ref{fig:final_feature_importance} 所示。
-Permutation importance 衡量打乱某一特征后模型 ROC AUC 的平均下降幅度，
-因此更适合用于解释非线性模型对不同输入变量的依赖程度。
-这种基于随机置换评估变量贡献的思想也常用于树模型的模型无关解释
-\cite{breimanRandomForests2001}。
 
-\begin{figure}[!t]
+\begin{figure}[H]
   \centering
   \includegraphics[width=0.88\linewidth]{feature_importance.png}
   \caption{阈值优化后 SVM 的特征重要性（Permutation Importance）}
   \label{fig:final_feature_importance}
 \end{figure}
+
+Permutation importance 衡量打乱某一特征后模型 ROC AUC 的平均下降幅度，
+因此更适合用于解释非线性模型对不同输入变量的依赖程度。
+这种基于随机置换评估变量贡献的思想也常用于树模型的模型无关解释
+\cite{breimanRandomForests2001}。
 
 最终模型中，Glucose 的重要性均值为 0.155259，
 明显高于其他特征，
@@ -275,9 +272,9 @@ Insulin、BloodPressure 和 SkinThickness 的重要性相对较低，
 从而使重要性被分散或低估；条件置换重要性研究也指出，
 解释相关变量时需要显式考虑特征间依赖关系
 \cite{debeerConditionalPermutationImportance2020}。
-因此，本节将重要性结果用于识别模型依赖和生成解释线索，
-而不将其作为变量因果效应或临床诊断依据。
-需要强调的是，特征重要性反映模型在当前数据集上的预测依赖，
+因此，本节只将重要性结果用于识别模型依赖和生成解释线索，
+不将其作为变量因果效应或临床诊断依据。
+特征重要性反映的是模型在当前数据集上的预测依赖，
 不能直接解释为医学因果关系。
 \FloatBarrier
 

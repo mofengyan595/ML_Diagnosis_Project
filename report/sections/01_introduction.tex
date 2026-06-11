@@ -2,8 +2,8 @@
 
 糖尿病是一类以慢性高血糖为主要表现的代谢性疾病。
 长期血糖控制不佳会增加心血管、肾脏、神经和视网膜等并发症风险。
-世界卫生组织和 Reza 等均指出，糖尿病仍是重要公共卫生问题，
-早期诊断和管理有助于预防或延缓并发症发生
+世界卫生组织指出，糖尿病仍是重要公共卫生问题；
+Reza 等的研究也强调，早期诊断和管理有助于预防或延缓并发症发生
 \cite{whoDiabetesFactSheet2024,rezaImprovingDiabetesDisease2024}。
 在常规筛查场景中，结构化体检指标比复杂医学检查更容易获取，
 因此利用机器学习模型进行糖尿病风险预测具有实际意义。
@@ -14,9 +14,9 @@
 该数据集规模较小但变量清晰，
 适合在统一预处理流程下比较不同分类算法的性能和误判特征。
 
-本文目标是构建一套糖尿病风险预测流程：
-首先完成缺失值、异常值、标准化和分层划分等数据处理；
-其次以 Logistic Regression 作为可解释基准，
-并在统一实验协议下比较 KNN、Decision Tree、Random Forest、SVM、Gradient Boosting、XGBoost 和 LightGBM 等多种模型；
-最后通过分类指标、ROC AUC、混淆矩阵和特征解释分析模型表现，
+本文围绕糖尿病风险预测流程展开：
+数据层面完成缺失值、异常值、标准化和分层划分处理；
+模型层面以 Logistic Regression 作为可解释基准，
+并在相同实验设置下比较 KNN、Decision Tree、Random Forest、SVM、Gradient Boosting、XGBoost 和 LightGBM 等多种模型；
+结果分析部分结合分类指标、ROC AUC、混淆矩阵和特征解释评估模型表现，
 并将最终模型接入交互式演示系统。
